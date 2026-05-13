@@ -1,0 +1,108 @@
+[project]
+name = "ag-gateway"
+version = "0.1.0"
+description = "Security and policy plane for the AI Agent Security Platform"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "lee-mcfaul" }]
+
+dependencies = [
+    # LiteLLM and FastAPI base
+    "litellm[proxy]>=1.50.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+
+    # HTTP clients
+    "httpx>=0.27.0",
+
+    # Auth (JWT + JWKS)
+    "pyjwt[crypto]>=2.9.0",
+    "jwcrypto>=1.5.6",
+
+    # Scrubbing
+    "presidio-analyzer>=2.2.355",
+    "presidio-anonymizer>=2.2.355",
+    "spacy>=3.7.0",
+
+    # JSON Schema
+    "jsonschema>=4.23.0",
+
+    # Kubernetes
+    "kubernetes>=31.0.0",
+
+    # Persistence
+    "asyncpg>=0.30.0",
+
+    # Observability
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
+    "opentelemetry-exporter-otlp>=1.27.0",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-httpx>=0.48b0",
+    "prometheus-client>=0.21.0",
+    "structlog>=24.4.0",
+
+    # Crypto / signing
+    "cryptography>=43.0.0",
+    "sigstore>=3.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "testcontainers[postgres]>=4.8.0",
+    "hypothesis>=6.115.0",
+    "respx>=0.21.0",
+    "ruff>=0.7.0",
+    "mypy>=1.13.0",
+    "bandit>=1.7.10",
+    "types-pyjwt",
+    "types-jsonschema",
+]
+
+[project.scripts]
+ag-gateway = "ag_gateway.server:main"
+compile-policy = "tools.compile_policy.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ag_gateway"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: requires docker (--integration to run)",
+]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "RET", "SIM"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+
+[tool.bandit]
+skips = ["B101"]
+
+[tool.coverage.run]
+source = ["src/ag_gateway"]
+branch = true
