@@ -1,0 +1,89 @@
+name: Build and sign
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with: { python-version: "3.12" }
+      - run: uv sync --dev
+      - run: uv run python -m spacy download en_core_web_lg
+      - run: uv run pytest tests/unit
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/lee-mcfaul2/agent-gateway:${{ github.ref_name }}
+
+  sign:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: sigstore/cosign-installer@v3
+        with: { cosign-release: 'v2.2.2' }
+      - run: |
+          cosign sign --yes \
+            ghcr.io/lee-mcfaul2/agent-gateway@${{ needs.build.outputs.digest }}
+
+  provenance:
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+      packages: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    with:
+      image: ghcr.io/lee-mcfaul2/agent-gateway
+      digest: ${{ needs.build.outputs.digest }}
+      registry-username: ${{ github.actor }}
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
+
+  draft-release:
+    runs-on: ubuntu-latest
+    needs: [sign, provenance]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          body: |
+            # ${{ github.ref_name }}
+            Image: `ghcr.io/lee-mcfaul2/agent-gateway:${{ github.ref_name }}`
+            Cosign verify:
+            ```
+            cosign verify ghcr.io/lee-mcfaul2/agent-gateway:${{ github.ref_name }} \
+              --certificate-identity-regexp '^https://github\.com/lee-mcfaul2/agent-gateway/\.github/workflows/build-and-sign\.yml@refs/tags/${{ github.ref_name }}$' \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com
+            ```
