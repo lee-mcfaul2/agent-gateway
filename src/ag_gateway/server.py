@@ -127,11 +127,11 @@ async def build_app() -> tuple[FastAPI, dict[str, object]]:
     @app.get("/readyz")
     async def readyz() -> Response:
         try:
-            await tokenizer._client.get("/healthz", timeout=0.5)  # type: ignore[attr-defined]
+            await tokenizer._client.get("/healthz", timeout=0.5)
         except Exception:
             return PlainTextResponse("tokenizer", status_code=503)
         try:
-            await opa._client.get("/health", timeout=0.5)  # type: ignore[attr-defined]
+            await opa._client.get("/health", timeout=0.5)
         except Exception:
             return PlainTextResponse("opa", status_code=503)
         return PlainTextResponse("ok", status_code=200)
@@ -156,7 +156,7 @@ async def _serve() -> None:
     host, _, port = settings.listen_addr.lstrip(":").partition(":")
     if not port:
         port = host
-        host = "0.0.0.0"  # noqa: S104 — intentionally bind all interfaces in container
+        host = "0.0.0.0"  # noqa: S104 # nosec B104 — container binding all interfaces is intentional
     config = uvicorn.Config(app, host=host, port=int(port), log_config=None)
     server = uvicorn.Server(config)
 

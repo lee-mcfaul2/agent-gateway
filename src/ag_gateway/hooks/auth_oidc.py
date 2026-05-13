@@ -7,7 +7,7 @@ from typing import Any
 
 import httpx
 import jwt
-from jwt import PyJWKClient, PyJWKClientError
+from jwt import PyJWKClient, PyJWKClientError  # type: ignore[attr-defined]
 from jwt.exceptions import (
     ExpiredSignatureError,
     InvalidAudienceError,

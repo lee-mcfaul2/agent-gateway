@@ -79,7 +79,7 @@ class AuditLogger:
             raise AuditWriteError("audit queue full") from exc
 
     async def _drain(self) -> None:
-        assert self._pool is not None
+        assert self._pool is not None  # nosec B101 — internal precondition, not user-facing
         while True:
             event = await self._queue.get()
             try:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Header, Request
 
@@ -159,7 +159,7 @@ async def _detokenize_args(
     args: dict[str, Any], request_uuid: str, tokenizer: TokenizerClient
 ) -> dict[str, Any]:
     """Walk the args; replace every TOKEN_* string with its plaintext via tokenizer.detokenize."""
-    return await _walk_replace(args, request_uuid, tokenizer)
+    return cast("dict[str, Any]", await _walk_replace(args, request_uuid, tokenizer))
 
 
 async def _walk_replace(

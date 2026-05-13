@@ -6,7 +6,7 @@ import json
 import time
 import uuid as _uuid
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from kubernetes import client as k8s_client
 
@@ -121,7 +121,7 @@ class AgentJobLauncher:
                 try:
                     body = json.loads(line)
                     if isinstance(body, dict) and "terminate" in body:
-                        return body["terminate"]
+                        return cast("dict[str, Any]", body["terminate"])
                 except json.JSONDecodeError:
                     continue
         raise AgentFailedError(f"could not find terminate body in logs for {name}")

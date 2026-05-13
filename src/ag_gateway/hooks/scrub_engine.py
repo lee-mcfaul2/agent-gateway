@@ -72,7 +72,7 @@ class ScrubEngine:
             spans.append(Detection(category=cat, start=r.start, end=r.end, score=float(r.score)))
 
         # 3) Resolve overlaps: prefer higher severity, then higher score
-        severity_rank = {"secret": 3, "codeword": 2, "pii": 1}
+        severity_rank = {"secret": 3, "codeword": 2, "pii": 1}  # nosec B105 — severity rank, not a password
         spans.sort(
             key=lambda s: (s.start, -severity_rank[s.category.severity], -s.score)
         )

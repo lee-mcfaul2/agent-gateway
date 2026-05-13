@@ -54,7 +54,7 @@ class SchemaRegistry:
         )
 
 
-def validate_against(schema: dict, payload: Any) -> str | None:
+def validate_against(schema: dict[str, Any], payload: Any) -> str | None:
     """One-shot validation against an inline schema. Returns error message or None."""
     v = Draft202012Validator(schema)
     errors = sorted(v.iter_errors(payload), key=lambda e: list(e.absolute_path))
