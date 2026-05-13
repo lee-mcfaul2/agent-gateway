@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build outputs
+/dist/
+/build/
+/bin/
+/out/
+*.whl
+
+# Test/coverage
+.coverage
+coverage.xml
+htmlcov/
+*.log
+
+# IDE/editor
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Local secrets / dev keys
+/dev/secrets/
+*.pem
+*.key
