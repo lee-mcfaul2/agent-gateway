@@ -1,0 +1,28 @@
+# LiteLLM proxy configuration.
+model_list:
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/GATEWAY_AUDIT_DATABASE_URL
+  alerting_threshold: 300
+  proxy_batch_write_at: 60
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  json_logs: true
+  cache: false
+
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 1
+  timeout: 60
