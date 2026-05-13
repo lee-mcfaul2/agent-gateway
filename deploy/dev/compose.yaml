@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ag
+      POSTGRES_PASSWORD: ag
+      POSTGRES_DB: ag
+    ports: ["127.0.0.1:5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ag"]
+      interval: 2s
+      retries: 10
+
+  opa:
+    image: openpolicyagent/opa:1.6.0
+    command: ["run", "--server", "--addr=:8181", "/policy"]
+    volumes:
+      - ../../policy:/policy:ro
+    ports: ["127.0.0.1:8181:8181"]
+
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opa:
+        condition: service_started
+    environment:
+      GATEWAY_LISTEN_ADDR: ":8000"
+      GATEWAY_OIDC_ISSUER: "http://idp:8080/realms/ag"
+      GATEWAY_OIDC_AUDIENCE: "ag-gateway"
+      GATEWAY_TOKENIZER_URL: "http://pii-tokenizer:8443"
+      GATEWAY_OPA_URL: "http://opa:8181"
+      GATEWAY_PROMPT_BUNDLE_REF: "ghcr.io/lee-mcfaul2/lib-agent-prompt:dev"
+      GATEWAY_PROMPT_BUNDLE_COSIGN_KEY: "/etc/cosign.pub"
+      GATEWAY_AUDIT_DATABASE_URL: "postgresql://ag:ag@postgres/ag"
+      GATEWAY_AGENT_JOB_IMAGE: "ghcr.io/lee-mcfaul2/agent-sandbox:dev"
+      GATEWAY_AGENT_JOB_NAMESPACE: "sandbox"
+      GATEWAY_LOG_LEVEL: "debug"
+      ANTHROPIC_API_KEY: "test-key"
+      LITELLM_MASTER_KEY: "sk-dev"
+    volumes:
+      - ./cosign.pub:/etc/cosign.pub:ro
+    ports: ["8000:8000"]
