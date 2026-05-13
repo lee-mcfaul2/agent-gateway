@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ag
+      POSTGRES_PASSWORD: ag
+      POSTGRES_DB: ag
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ag"]
+      interval: 2s
+      retries: 10
+
+  opa:
+    image: openpolicyagent/opa:1.6.0
+    command:
+      - "run"
+      - "--server"
+      - "--addr=:8181"
+      - "/policy"
+    volumes:
+      - ../../policy:/policy:ro
+    ports:
+      - "127.0.0.1:18181:8181"
+
+  tokenizer-mock:
+    image: python:3.12-slim
+    command:
+      - "python"
+      - "-c"
+      - |
+        from fastapi import FastAPI; from uvicorn import run
+        app = FastAPI()
+
+        @app.post("/v1/init_request")
+        def init(b: dict): return {"request_uuid": b["request_uuid"], "expires_at": "2099-01-01T00:00:00Z"}
+
+        @app.post("/v1/tokenize")
+        def tok(b: dict): return {"token": f"TOKEN_{b['type']}_{abs(hash(b['plaintext']))}"}
+
+        @app.post("/v1/detokenize")
+        def detok(b: dict): return {"plaintext": "REDACTED-PLAINTEXT", "type": "EMAIL"}
+
+        @app.post("/v1/release_request")
+        def rel(b: dict): return {}
+
+        @app.get("/healthz")
+        def health(): return {"status": "ok"}
+
+        run(app, host="0.0.0.0", port=8443)
+    ports:
+      - "127.0.0.1:18443:8443"
