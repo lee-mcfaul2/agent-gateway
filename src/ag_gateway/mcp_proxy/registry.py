@@ -8,7 +8,6 @@ from typing import Literal
 
 from ag_gateway.obs.metrics import MCP_STATE
 
-
 MCPState = Literal["healthy", "degraded", "unknown"]
 
 
@@ -31,7 +30,7 @@ class MCPRegistry:
         self._lock = threading.RLock()
 
     @classmethod
-    def from_bundle(cls, bundle_root: Path) -> "MCPRegistry":
+    def from_bundle(cls, bundle_root: Path) -> MCPRegistry:
         path = bundle_root / "mcps" / "catalog.json"
         if not path.exists():
             raise FileNotFoundError(f"mcp catalog not found: {path}")

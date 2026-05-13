@@ -20,7 +20,7 @@ class Detection:
     def span_text(self) -> str:
         return ""
 
-    def with_text(self, original: str) -> "Detection":
+    def with_text(self, original: str) -> Detection:
         return Detection(
             category=self.category, start=self.start, end=self.end, score=self.score
         )
@@ -46,7 +46,10 @@ class ScrubEngine:
         self._presidio = presidio or AnalyzerEngine()
 
     def scan(self, text: str, language: str = "en") -> list[Detection]:
-        """Return non-overlapping detections in start order, picking highest-severity on conflict."""
+        """Return non-overlapping detections in start order.
+
+        Pick highest-severity on conflict.
+        """
         spans: list[Detection] = []
 
         # 1) Regex backstop — any category that ships patterns

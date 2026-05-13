@@ -7,7 +7,6 @@ import httpx
 
 from ag_gateway.mcp_proxy.registry import MCPEntry
 
-
 ClientError = Literal[
     "MCP_UNAVAILABLE",
     "MCP_TIMEOUT",

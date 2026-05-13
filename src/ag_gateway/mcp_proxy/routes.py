@@ -11,12 +11,11 @@ from ag_gateway.hooks.opa_client import OPAClient
 from ag_gateway.hooks.scrub_engine import ScrubEngine
 from ag_gateway.hooks.scrub_outbound import scrub_outbound
 from ag_gateway.hooks.tokenizer_client import TokenizerClient, TokenizerError, TokenizerUnavailable
-from ag_gateway.mcp_proxy.client import CallFail, CallOK, MCPClientPool
+from ag_gateway.mcp_proxy.client import CallFail, MCPClientPool
 from ag_gateway.mcp_proxy.registry import MCPRegistry
 from ag_gateway.mcp_proxy.request_state import RequestStateStore
 from ag_gateway.obs.metrics import TOOL_CALLS_TOTAL, UUID_MISMATCH_TOTAL
 from ag_gateway.schemas.validate import SchemaRegistry
-
 
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 TOKEN_RE = re.compile(r"\bTOKEN_[A-Z_]+_[A-Z2-7]+\b")
@@ -60,34 +59,52 @@ def make_router(deps: Deps) -> APIRouter:
 
         if not UUID_RE.match(request_uuid):
             UUID_MISMATCH_TOTAL.labels(reason="malformed").inc()
-            return wrap_error("UUID_MISMATCH", "malformed", mcp=mcp, tool=tool, request_uuid=request_uuid)
+            return wrap_error(
+                "UUID_MISMATCH", "malformed", mcp=mcp, tool=tool, request_uuid=request_uuid
+            )
 
         ctx = deps.state.get(request_uuid)
         if ctx is None:
             UUID_MISMATCH_TOTAL.labels(reason="stale").inc()
-            return wrap_error("UUID_MISMATCH", "stale", mcp=mcp, tool=tool, request_uuid=request_uuid)
+            return wrap_error(
+                "UUID_MISMATCH", "stale", mcp=mcp, tool=tool, request_uuid=request_uuid
+            )
         if x_spiffe_id and ctx.spiffe_id != x_spiffe_id:
             UUID_MISMATCH_TOTAL.labels(reason="foreign_spiffe").inc()
             return wrap_error(
-                "UUID_MISMATCH", "foreign_spiffe", mcp=mcp, tool=tool, request_uuid=request_uuid
+                "UUID_MISMATCH",
+                "foreign_spiffe",
+                mcp=mcp,
+                tool=tool,
+                request_uuid=request_uuid,
             )
 
         try:
             entry = deps.mcps.get(mcp)
         except KeyError:
-            return wrap_error("MCP_UNAVAILABLE", "not_in_catalog", mcp=mcp, tool=tool, request_uuid=request_uuid)
+            return wrap_error(
+                "MCP_UNAVAILABLE", "not_in_catalog", mcp=mcp, tool=tool, request_uuid=request_uuid
+            )
 
-        decision = await opa_check(deps.opa, ctx.user_claims, mcp, tool, args, request_uuid)
+        decision = await opa_check(
+            deps.opa, ctx.user_claims, mcp, tool, args, request_uuid
+        )
         if not decision.allow:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="opa_deny").inc()
-            return wrap_error("OPA_DENY", decision.reason, mcp=mcp, tool=tool, request_uuid=request_uuid)
+            return wrap_error(
+                "OPA_DENY", decision.reason, mcp=mcp, tool=tool, request_uuid=request_uuid
+            )
 
         schema_ref = f"{mcp}/{entry.schema_version}/{tool}.request.json"
         err = deps.schemas.validate(args, schema_ref, kind="request", mcp=mcp)
         if err is not None:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="schema_fail").inc()
             return wrap_error(
-                "SCHEMA_VALIDATION_FAILED", err.reason, mcp=mcp, tool=tool, request_uuid=request_uuid
+                "SCHEMA_VALIDATION_FAILED",
+                err.reason,
+                mcp=mcp,
+                tool=tool,
+                request_uuid=request_uuid,
             )
 
         try:
@@ -95,10 +112,20 @@ def make_router(deps: Deps) -> APIRouter:
         except TokenizerUnavailable as exc:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="mcp_error").inc()
             return wrap_error(
-                "TOKENIZER_UNAVAILABLE", str(exc), mcp=mcp, tool=tool, request_uuid=request_uuid
+                "TOKENIZER_UNAVAILABLE",
+                str(exc),
+                mcp=mcp,
+                tool=tool,
+                request_uuid=request_uuid,
             )
         except TokenizerError as exc:
-            return wrap_error(exc.error_type, exc.message, mcp=mcp, tool=tool, request_uuid=request_uuid)
+            return wrap_error(
+                exc.error_type,
+                exc.message,
+                mcp=mcp,
+                tool=tool,
+                request_uuid=request_uuid,
+            )
 
         client = deps.mcp_pool.for_(entry)
         res = await client.call(tool, args)
@@ -111,7 +138,11 @@ def make_router(deps: Deps) -> APIRouter:
         if err is not None:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="schema_fail").inc()
             return wrap_error(
-                "SCHEMA_VALIDATION_FAILED", err.reason, mcp=mcp, tool=tool, request_uuid=request_uuid
+                "SCHEMA_VALIDATION_FAILED",
+                err.reason,
+                mcp=mcp,
+                tool=tool,
+                request_uuid=request_uuid,
             )
 
         scrubbed = await _scrub_response_recursive(

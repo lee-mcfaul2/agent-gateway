@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-
 SeverityClass = Literal["pii", "codeword", "secret"]
 
 
@@ -29,7 +28,7 @@ class ScrubCatalog:
         self._by_name = {c.name: c for c in categories}
 
     @classmethod
-    def from_bundle(cls, bundle_root: Path) -> "ScrubCatalog":
+    def from_bundle(cls, bundle_root: Path) -> ScrubCatalog:
         path = bundle_root / "schemas" / "shared" / "scrub-types.json"
         if not path.exists():
             raise FileNotFoundError(f"scrub-types not found: {path}")

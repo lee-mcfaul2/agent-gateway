@@ -9,7 +9,6 @@ import asyncpg
 
 from ag_gateway.obs.logging import get_logger
 
-
 log = get_logger(__name__)
 
 

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from ag_gateway.obs.logging import get_logger
 from ag_gateway.obs.metrics import COST_CAP_REJECTIONS_TOTAL
 
-
 log = get_logger(__name__)
 
 

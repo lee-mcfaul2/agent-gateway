@@ -146,8 +146,10 @@ def test_uuid_mismatch_stale(fixtures: dict[str, Any]) -> None:
 
 @respx.mock
 def test_opa_deny(fixtures: dict[str, Any]) -> None:
-    respx.post("http://opa:8181/v1/data/ag_gateway/authz/decision").mock(
-        return_value=Response(200, json={"result": {"allow": False, "reason": "missing_permission:audit:read"}})
+    respx.post("http://opa:8181/v1/data/ag_gateway/authz/decision").mock(  # noqa: E501
+        return_value=Response(
+            200, json={"result": {"allow": False, "reason": "missing_permission:audit:read"}}
+        )
     )
     deps = Deps(
         state=fixtures["state"],

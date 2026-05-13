@@ -24,7 +24,7 @@ class SchemaRegistry:
     def __init__(self, root: Path) -> None:
         self._root = root
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=256)  # noqa: B019 — registry is a long-lived singleton
     def _load(self, schema_ref: str) -> Draft202012Validator:
         path = self._root / "schemas" / schema_ref
         if not path.exists():

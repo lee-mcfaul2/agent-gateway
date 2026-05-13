@@ -13,13 +13,25 @@ from ag_gateway.schemas.scrub_categories import ScrubCatalog
 def catalog(tmp_path: Path) -> ScrubCatalog:
     p = tmp_path / "schemas" / "shared"
     p.mkdir(parents=True)
-    (p / "scrub-types.json").write_text(
+    (p / "scrub-types.json").write_text(  # noqa: E501
         json.dumps(
             {
                 "categories": [
-                    {"name": "EMAIL", "severity": "pii", "patterns": [r"\b\S+@\S+\.\S+\b"]},
-                    {"name": "SECRET_API_KEY", "severity": "secret", "patterns": [r"sk-[A-Za-z0-9]+"]},
-                    {"name": "CODEWORD_PROJECT", "severity": "codeword", "patterns": [r"\bFalcon\b"]},
+                    {
+                        "name": "EMAIL",
+                        "severity": "pii",
+                        "patterns": [r"\b\S+@\S+\.\S+\b"],
+                    },
+                    {
+                        "name": "SECRET_API_KEY",
+                        "severity": "secret",
+                        "patterns": [r"sk-[A-Za-z0-9]+"],
+                    },
+                    {
+                        "name": "CODEWORD_PROJECT",
+                        "severity": "codeword",
+                        "patterns": [r"\bFalcon\b"],
+                    },
                 ]
             }
         )

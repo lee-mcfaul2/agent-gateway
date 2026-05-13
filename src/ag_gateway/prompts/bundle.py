@@ -11,7 +11,6 @@ from pathlib import Path
 from ag_gateway.obs.logging import get_logger
 from ag_gateway.obs.metrics import BUNDLE_VERIFY_FAILURES_TOTAL
 
-
 log = get_logger(__name__)
 
 

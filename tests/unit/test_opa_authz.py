@@ -50,6 +50,9 @@ async def test_check_deny_increments_metric(opa: OPAClient) -> None:
     assert d.reason.startswith("missing_permission")
     from ag_gateway.obs.metrics import OPA_DENIALS_TOTAL
 
-    assert (
-        OPA_DENIALS_TOTAL.labels(mcp="audit_db", tool="search", reason="missing_permission")._value.get() >= 1.0
+    assert (  # noqa: E501
+        OPA_DENIALS_TOTAL.labels(
+            mcp="audit_db", tool="search", reason="missing_permission"
+        )._value.get()
+        >= 1.0
     )

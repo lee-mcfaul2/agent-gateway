@@ -3,8 +3,6 @@ from __future__ import annotations
 import tarfile
 from pathlib import Path
 
-import pytest
-
 
 def _import_compile_main():
     """Import the compile-policy main with fallback for the hyphenated directory."""

@@ -19,7 +19,6 @@ from jwt.exceptions import (
 from ag_gateway.obs.logging import get_logger
 from ag_gateway.obs.metrics import JWT_FAILURES_TOTAL, JWT_JWKS_REFRESH_FAILURES_TOTAL
 
-
 log = get_logger(__name__)
 
 

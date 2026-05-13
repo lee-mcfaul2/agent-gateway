@@ -11,7 +11,6 @@ from ag_gateway.obs.metrics import (
     TOKENS_GENERATED_TOTAL,
 )
 
-
 log = get_logger(__name__)
 
 REDACTION_MARKER = "[REDACTED]"

@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from ag_gateway.config import Settings, load_settings
 
-
 REQUIRED_ENV = {
     "GATEWAY_OIDC_ISSUER": "https://idp.example.com",
     "GATEWAY_OIDC_AUDIENCE": "ag-gateway",

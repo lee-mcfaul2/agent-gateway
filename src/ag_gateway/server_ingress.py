@@ -22,10 +22,9 @@ from ag_gateway.jobs.launcher import (
 from ag_gateway.jobs.result import TerminateInvalid, extract_terminate
 from ag_gateway.mcp_proxy.request_state import RequestContext, RequestStateStore
 from ag_gateway.obs.logging import get_logger
-from ag_gateway.obs.metrics import REQUESTS_TOTAL, REQUEST_DURATION
+from ag_gateway.obs.metrics import REQUEST_DURATION, REQUESTS_TOTAL
 from ag_gateway.obs.quarantine import QuarantineRecord, QuarantineStore
 from ag_gateway.prompts.registry import PromptNotFound, PromptRegistry
-
 
 log = get_logger(__name__)
 
@@ -44,7 +43,9 @@ class IngressDeps:
     litellm_internal_url: str
 
 
-def _error(error_type: str, http_status: int, message: str, retriable: bool = False) -> dict[str, Any]:
+def _error(
+    error_type: str, http_status: int, message: str, retriable: bool = False
+) -> dict[str, Any]:
     return {
         "error_type": error_type,
         "retriable": retriable,
@@ -64,13 +65,17 @@ def make_router(deps: IngressDeps) -> APIRouter:
         body = await request.json()
 
         if not authorization.lower().startswith("bearer "):
-            raise HTTPException(status_code=401, detail=_error("JWT_MISSING", 401, "missing Authorization"))
+            raise HTTPException(
+                status_code=401,
+                detail=_error("JWT_MISSING", 401, "missing Authorization"),
+            )
         token = authorization.split(" ", 1)[1]
         try:
             user = deps.oidc.validate(token)
         except JWTValidationError as exc:
             raise HTTPException(
-                status_code=401, detail=_error("JWT_VALIDATION_FAILED", 401, exc.message)
+                status_code=401,
+                detail=_error("JWT_VALIDATION_FAILED", 401, exc.message),
             ) from exc
 
         prompt_name = str(body.get("model", ""))
@@ -78,13 +83,18 @@ def make_router(deps: IngressDeps) -> APIRouter:
             prompt = deps.prompts.by_name(prompt_name)
         except PromptNotFound as exc:
             raise HTTPException(
-                status_code=404, detail=_error("PROMPT_NOT_FOUND", 404, prompt_name)
+                status_code=404,
+                detail=_error("PROMPT_NOT_FOUND", 404, prompt_name),
             ) from exc
 
         cap_usd = float(prompt.cost_caps.get("max_usd", 5.0))
         cap_window = int(prompt.cost_caps.get("window_seconds", 3600))
         try:
-            deps.cost_meter.check(prompt.name, user.sub, CostCap(max_usd=cap_usd, window_seconds=cap_window))
+            deps.cost_meter.check(
+                prompt.name,
+                user.sub,
+                CostCap(max_usd=cap_usd, window_seconds=cap_window),
+            )
         except CostCapExceeded as exc:
             REQUESTS_TOTAL.labels(prompt=prompt.name, outcome="cost_cap").inc()
             raise HTTPException(
@@ -98,7 +108,10 @@ def make_router(deps: IngressDeps) -> APIRouter:
         except TokenizerUnavailable as exc:
             REQUESTS_TOTAL.labels(prompt=prompt.name, outcome="error").inc()
             raise HTTPException(
-                status_code=503, detail=_error("TOKENIZER_UNAVAILABLE", 503, str(exc), retriable=True)
+                status_code=503,
+                detail=_error(
+                    "TOKENIZER_UNAVAILABLE", 503, str(exc), retriable=True
+                ),
             ) from exc
 
         user_text = _last_user_text(body)
@@ -109,7 +122,10 @@ def make_router(deps: IngressDeps) -> APIRouter:
         except TokenizerUnavailable as exc:
             REQUESTS_TOTAL.labels(prompt=prompt.name, outcome="error").inc()
             raise HTTPException(
-                status_code=503, detail=_error("TOKENIZER_UNAVAILABLE", 503, str(exc), retriable=True)
+                status_code=503,
+                detail=_error(
+                    "TOKENIZER_UNAVAILABLE", 503, str(exc), retriable=True
+                ),
             ) from exc
 
         for sec in scrub.secret_events:
@@ -120,7 +136,10 @@ def make_router(deps: IngressDeps) -> APIRouter:
                     prompt_uuid=prompt.uuid,
                     reason="SECRET_EXFILTRATION",
                     category=sec.category,
-                    snapshot={"category": sec.category, "text_with_redaction": sec.text_with_redaction},
+                    snapshot={
+                        "category": sec.category,
+                        "text_with_redaction": sec.text_with_redaction,
+                    },
                 )
             )
             await deps.audit.log(
@@ -155,17 +174,24 @@ def make_router(deps: IngressDeps) -> APIRouter:
             except AgentLaunchError as exc:
                 REQUESTS_TOTAL.labels(prompt=prompt.name, outcome="error").inc()
                 raise HTTPException(
-                    status_code=503, detail=_error("AGENT_LAUNCH_FAILED", 503, str(exc), retriable=True)
+                    status_code=503,
+                    detail=_error(
+                        "AGENT_LAUNCH_FAILED", 503, str(exc), retriable=True
+                    ),
                 ) from exc
             except AgentTimeoutError as exc:
                 REQUESTS_TOTAL.labels(prompt=prompt.name, outcome="timeout").inc()
                 raise HTTPException(
-                    status_code=504, detail=_error("AGENT_TIMEOUT", 504, str(exc), retriable=True)
+                    status_code=504,
+                    detail=_error("AGENT_TIMEOUT", 504, str(exc), retriable=True),
                 ) from exc
             except AgentFailedError as exc:
                 REQUESTS_TOTAL.labels(prompt=prompt.name, outcome="error").inc()
                 raise HTTPException(
-                    status_code=500, detail=_error("AGENT_FAILED", 500, str(exc), retriable=True)
+                    status_code=500,
+                    detail=_error(
+                        "AGENT_FAILED", 500, str(exc), retriable=True
+                    ),
                 ) from exc
 
             try:
@@ -181,7 +207,9 @@ def make_router(deps: IngressDeps) -> APIRouter:
             )
 
             REQUESTS_TOTAL.labels(prompt=prompt.name, outcome="terminate").inc()
-            REQUEST_DURATION.labels(prompt=prompt.name, outcome="terminate").observe(time.time() - start)
+            REQUEST_DURATION.labels(prompt=prompt.name, outcome="terminate").observe(
+                time.time() - start
+            )
             await deps.audit.log(
                 AuditEvent(
                     event_type="request",

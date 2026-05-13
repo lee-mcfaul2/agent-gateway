@@ -7,7 +7,6 @@ from typing import Any
 
 from ag_gateway.obs.logging import get_logger
 
-
 log = get_logger(__name__)
 
 
@@ -44,7 +43,7 @@ class PromptRegistry:
         self._by_uuid: dict[str, Prompt] = {}
 
     @classmethod
-    def from_bundle(cls, bundle_root: Path) -> "PromptRegistry":
+    def from_bundle(cls, bundle_root: Path) -> PromptRegistry:
         registry = cls()
         prompts_dir = bundle_root / "prompts"
         if not prompts_dir.exists():

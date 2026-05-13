@@ -3,12 +3,11 @@ from __future__ import annotations
 import os
 import subprocess
 import time
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import httpx
 import pytest
-
 
 COMPOSE_FILE = Path(__file__).parent / "compose.yaml"
 

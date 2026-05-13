@@ -12,7 +12,6 @@ from kubernetes import client as k8s_client
 from ag_gateway.jobs.k8s import JobSpec, build_job
 from ag_gateway.obs.logging import get_logger
 
-
 log = get_logger(__name__)
 
 
@@ -88,7 +87,7 @@ class AgentJobLauncher:
                 self._batch.delete_namespaced_job(
                     name, self._ns, propagation_policy="Background"
                 )
-            except Exception:
+            except Exception:  # noqa: S110 — best-effort cleanup should not fail loudly
                 pass
 
     async def _wait(self, name: str) -> JobResult:

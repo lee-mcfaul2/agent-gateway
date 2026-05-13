@@ -35,7 +35,6 @@ from ag_gateway.schemas.validate import SchemaRegistry
 from ag_gateway.server_ingress import IngressDeps
 from ag_gateway.server_ingress import make_router as make_ingress_router
 
-
 log = get_logger(__name__)
 
 
@@ -157,7 +156,7 @@ async def _serve() -> None:
     host, _, port = settings.listen_addr.lstrip(":").partition(":")
     if not port:
         port = host
-        host = "0.0.0.0"
+        host = "0.0.0.0"  # noqa: S104 — intentionally bind all interfaces in container
     config = uvicorn.Config(app, host=host, port=int(port), log_config=None)
     server = uvicorn.Server(config)
 

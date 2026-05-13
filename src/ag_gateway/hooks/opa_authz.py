@@ -35,6 +35,10 @@ async def check(
     """Query OPA and increment denial metric on deny."""
     decision = await client.decide(build_input(user, mcp, tool, args, request_uuid))
     if not decision.allow:
-        reason_label = decision.reason.split(":", 1)[0] if ":" in decision.reason else decision.reason
+        reason_label = (
+            decision.reason.split(":", 1)[0]
+            if ":" in decision.reason
+            else decision.reason
+        )
         OPA_DENIALS_TOTAL.labels(mcp=mcp, tool=tool, reason=reason_label).inc()
     return decision

@@ -17,7 +17,7 @@ def _add_trace_context(_: object, __: str, event_dict: EventDict) -> EventDict:
         if ctx and ctx.is_valid:
             event_dict["trace_id"] = format(ctx.trace_id, "032x")
             event_dict["span_id"] = format(ctx.span_id, "016x")
-    except Exception:
+    except Exception:  # noqa: S110 — optional trace context is best-effort
         pass
     return event_dict
 

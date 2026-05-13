@@ -9,7 +9,6 @@ from ag_gateway.mcp_proxy.registry import MCPEntry, MCPRegistry
 from ag_gateway.obs.logging import get_logger
 from ag_gateway.obs.metrics import SCHEMA_FAILURES_TOTAL
 
-
 log = get_logger(__name__)
 
 
@@ -22,7 +21,9 @@ async def handshake_one(entry: MCPEntry, registry: MCPRegistry) -> bool:
     except httpx.HTTPError as exc:
         log.warning("mcp.handshake_unreachable", mcp=entry.name, err=str(exc))
         registry.set_state(entry.name, "degraded")
-        SCHEMA_FAILURES_TOTAL.labels(type="mcp_handshake", reason="unreachable", mcp=entry.name).inc()
+        SCHEMA_FAILURES_TOTAL.labels(
+            type="mcp_handshake", reason="unreachable", mcp=entry.name
+        ).inc()
         return False
 
     if r.status_code != 200:
@@ -37,7 +38,9 @@ async def handshake_one(entry: MCPEntry, registry: MCPRegistry) -> bool:
         body: dict[str, Any] = r.json()
     except ValueError:
         registry.set_state(entry.name, "degraded")
-        SCHEMA_FAILURES_TOTAL.labels(type="mcp_handshake", reason="bad_json", mcp=entry.name).inc()
+        SCHEMA_FAILURES_TOTAL.labels(
+            type="mcp_handshake", reason="bad_json", mcp=entry.name
+        ).inc()
         return False
 
     if body.get("schema_version") != entry.schema_version:
@@ -64,4 +67,4 @@ async def handshake_all(registry: MCPRegistry) -> dict[str, bool]:
         *[handshake_one(registry.get(n), registry) for n in registry.names()],
         return_exceptions=False,
     )
-    return dict(zip(registry.names(), results))
+    return dict(zip(registry.names(), results, strict=False))

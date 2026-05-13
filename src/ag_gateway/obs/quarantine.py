@@ -6,7 +6,6 @@ from typing import Any
 
 import asyncpg
 
-
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS quarantine (
     id BIGSERIAL PRIMARY KEY,
@@ -63,7 +62,9 @@ class QuarantineStore:
         async with self._pool.acquire() as conn:
             row = await conn.fetchrow(
                 """
-                INSERT INTO quarantine (request_uuid, user_sub, prompt_uuid, reason, category, snapshot)
+                INSERT INTO quarantine (
+                    request_uuid, user_sub, prompt_uuid, reason, category, snapshot
+                )
                 VALUES ($1::uuid, $2, $3::uuid, $4, $5, $6::jsonb)
                 RETURNING id
                 """,
@@ -81,5 +82,9 @@ class QuarantineStore:
         if len(s.encode("utf-8")) <= self._max_bytes:
             return s
         return json.dumps(
-            {"_truncated": True, "_original_bytes": len(s.encode("utf-8")), "head": s[: self._max_bytes - 256]}
+            {
+                "_truncated": True,
+                "_original_bytes": len(s.encode("utf-8")),
+                "head": s[: self._max_bytes - 256],
+            }
         )

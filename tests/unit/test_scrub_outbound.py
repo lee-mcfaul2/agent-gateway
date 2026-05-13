@@ -24,12 +24,20 @@ class _FakeTokenizer:
 def engine(tmp_path: Path) -> ScrubEngine:
     p = tmp_path / "schemas" / "shared"
     p.mkdir(parents=True)
-    (p / "scrub-types.json").write_text(
+    (p / "scrub-types.json").write_text(  # noqa: E501
         json.dumps(
             {
                 "categories": [
-                    {"name": "EMAIL", "severity": "pii", "patterns": [r"\b\S+@\S+\.\S+\b"]},
-                    {"name": "SECRET_API_KEY", "severity": "secret", "patterns": [r"sk-[A-Za-z0-9]+"]},
+                    {
+                        "name": "EMAIL",
+                        "severity": "pii",
+                        "patterns": [r"\b\S+@\S+\.\S+\b"],
+                    },
+                    {
+                        "name": "SECRET_API_KEY",
+                        "severity": "secret",
+                        "patterns": [r"sk-[A-Za-z0-9]+"],
+                    },
                 ]
             }
         )
