@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import time
 import uuid as _uuid
@@ -83,12 +84,11 @@ class AgentJobLauncher:
         try:
             return await self._wait(name)
         finally:
-            try:
+            # Best-effort cleanup; failures here shouldn't mask the real outcome.
+            with contextlib.suppress(Exception):
                 self._batch.delete_namespaced_job(
                     name, self._ns, propagation_policy="Background"
                 )
-            except Exception:  # noqa: S110 — best-effort cleanup should not fail loudly
-                pass
 
     async def _wait(self, name: str) -> JobResult:
         deadline = time.time() + self._timeout

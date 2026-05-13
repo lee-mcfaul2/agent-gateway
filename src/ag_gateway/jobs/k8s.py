@@ -54,7 +54,7 @@ def build_job(spec: JobSpec) -> k8s_client.V1Job:
         spec=pod_spec,
     )
 
-    job = k8s_client.V1Job(
+    return k8s_client.V1Job(
         api_version="batch/v1",
         kind="Job",
         metadata=k8s_client.V1ObjectMeta(
@@ -69,4 +69,3 @@ def build_job(spec: JobSpec) -> k8s_client.V1Job:
             active_deadline_seconds=spec.timeout_seconds,
         ),
     )
-    return job
