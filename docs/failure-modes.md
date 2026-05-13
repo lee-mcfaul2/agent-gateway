@@ -18,7 +18,7 @@
 
 | `error` | Trigger |
 |---|---|
-| `OPA_DENY` | User lacks permission(s) declared for `(mcp, tool)` |
+| `OPA_DENY` | User lacks the minimum permission required to reach `mcp` (coarse reachability — per-tool authz enforced at the MCP) |
 | `SCHEMA_VALIDATION_FAILED` | Args don't match the MCP's request schema (or response failed validation) |
 | `MCP_UNAVAILABLE` / `MCP_TIMEOUT` / `MCP_INTERNAL_ERROR` | Network or MCP-side failure |
 | `MCP_BAD_RESPONSE` | MCP returned 4xx or non-JSON |

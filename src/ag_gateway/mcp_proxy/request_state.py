@@ -14,6 +14,7 @@ class RequestContext:
     prompt: Prompt
     spiffe_id: str
     created_at: float
+    jwt: str
 
 
 class RequestStateStore:

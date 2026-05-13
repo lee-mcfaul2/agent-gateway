@@ -72,6 +72,7 @@ def fixtures(tmp_path: Path) -> dict[str, Any]:
             prompt=prompt,
             spiffe_id="spiffe://x/job-1",
             created_at=__import__("time").time(),
+            jwt="test.jwt.token",
         ),
     )
 
@@ -92,9 +93,9 @@ def test_happy_path(fixtures: dict[str, Any]) -> None:
     respx.post("http://opa:8181/v1/data/ag_gateway/authz/decision").mock(
         return_value=Response(200, json={"result": {"allow": True, "reason": "ok"}})
     )
-    respx.post("http://kb-mcp.mcp.svc.cluster.local:8443/v1/tools/search").mock(
-        return_value=Response(200, json={"rows": ["a", "b"]})
-    )
+    mcp_route = respx.post(
+        "http://kb-mcp.mcp.svc.cluster.local:8443/v1/tools/search"
+    ).mock(return_value=Response(200, json={"rows": ["a", "b"]}))
 
     deps = Deps(
         state=fixtures["state"],
@@ -117,6 +118,7 @@ def test_happy_path(fixtures: dict[str, Any]) -> None:
     body = r.json()
     assert body["tool_result"]["ok"] is True
     assert body["tool_result"]["data"]["rows"] == ["a", "b"]
+    assert mcp_route.calls.last.request.headers["authorization"] == "Bearer test.jwt.token"
 
 
 def test_uuid_mismatch_stale(fixtures: dict[str, Any]) -> None:

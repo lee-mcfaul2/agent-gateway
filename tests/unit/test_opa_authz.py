@@ -18,12 +18,13 @@ async def opa() -> OPAClient:
 
 def test_build_input_shape() -> None:
     u = UserClaims(sub="alice", groups=("support",), permissions=("kb:read",))
-    doc = build_input(u, "kb", "search", {"q": "x"}, "req-1")
+    doc = build_input(u, "kb", "req-1")
     assert doc["user"]["sub"] == "alice"
+    assert doc["user"]["permissions"] == ["kb:read"]
     assert doc["mcp"] == "kb"
-    assert doc["tool"] == "search"
-    assert doc["args"] == {"q": "x"}
     assert doc["request_uuid"] == "req-1"
+    assert "tool" not in doc
+    assert "args" not in doc
 
 
 @respx.mock
@@ -32,7 +33,7 @@ async def test_check_allow(opa: OPAClient) -> None:
         return_value=Response(200, json={"result": {"allow": True, "reason": "ok"}})
     )
     u = UserClaims(sub="a", permissions=("kb:read",))
-    d = await check(opa, u, "kb", "search", {}, "r")
+    d = await check(opa, u, "kb", "r")
     assert d.allow is True
 
 
@@ -45,14 +46,14 @@ async def test_check_deny_increments_metric(opa: OPAClient) -> None:
         )
     )
     u = UserClaims(sub="a")
-    d = await check(opa, u, "audit_db", "search", {}, "r")
+    d = await check(opa, u, "audit_db", "r")
     assert d.allow is False
     assert d.reason.startswith("missing_permission")
     from ag_gateway.obs.metrics import OPA_DENIALS_TOTAL
 
-    assert (  # noqa: E501
+    assert (
         OPA_DENIALS_TOTAL.labels(
-            mcp="audit_db", tool="search", reason="missing_permission"
+            mcp="audit_db", reason="missing_permission"
         )._value.get()
         >= 1.0
     )

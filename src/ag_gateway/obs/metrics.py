@@ -77,8 +77,8 @@ AUTHN_RATE_LIMIT_TOTAL = Counter(
 )
 OPA_DENIALS_TOTAL = Counter(
     "gateway_opa_denials_total",
-    "OPA-denied tool calls.",
-    labelnames=("mcp", "tool", "reason"),
+    "OPA-denied MCP reachability checks (coarse: user cannot reach MCP at all).",
+    labelnames=("mcp", "reason"),
     registry=REGISTRY,
 )
 COST_CAP_REJECTIONS_TOTAL = Counter(

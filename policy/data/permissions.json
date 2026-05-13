@@ -1,12 +1,6 @@
 {
   "permissions": {
-    "kb": {
-      "search": ["kb:read"],
-      "fetch": ["kb:read"]
-    },
-    "audit_db": {
-      "search": ["audit:read"],
-      "report": ["audit:read", "audit:export"]
-    }
+    "kb": "kb:read",
+    "audit_db": "audit:read"
   }
 }

@@ -160,6 +160,7 @@ def make_router(deps: IngressDeps) -> APIRouter:
                 prompt=prompt,
                 spiffe_id="",
                 created_at=time.time(),
+                jwt=token,
             ),
         )
 

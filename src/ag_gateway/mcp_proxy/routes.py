@@ -87,7 +87,7 @@ def make_router(deps: Deps) -> APIRouter:
             )
 
         decision = await opa_check(
-            deps.opa, ctx.user_claims, mcp, tool, args, request_uuid
+            deps.opa, ctx.user_claims, mcp, request_uuid
         )
         if not decision.allow:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="opa_deny").inc()
@@ -128,7 +128,9 @@ def make_router(deps: Deps) -> APIRouter:
             )
 
         client = deps.mcp_pool.for_(entry)
-        res = await client.call(tool, args)
+        res = await client.call(
+            tool, args, headers={"Authorization": f"Bearer {ctx.jwt}"}
+        )
         if isinstance(res, CallFail):
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="mcp_error").inc()
             return wrap_error(res.error, res.reason, mcp=mcp, tool=tool, request_uuid=request_uuid)

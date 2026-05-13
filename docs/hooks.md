@@ -25,7 +25,11 @@ Each hook in `src/ag_gateway/hooks/` does one thing. This document is the contra
 
 ## opa_authz
 
-- Input: `(user_claims, mcp, tool, args, request_uuid)`
+- Coarse "can this user reach this MCP at all" reachability check. Per-tool
+  authorization is enforced by each MCP under the hybrid authz model — the
+  gateway forwards the user JWT in `Authorization: Bearer` on the outbound MCP
+  call, and the MCP validates the JWT and runs its own per-tool permission check.
+- Input: `(user_claims, mcp, request_uuid)`
 - Output: `Decision(allow, reason)`
 - Build the input doc using `build_input(...)` — keep field names stable; Rego policies depend on them
 
