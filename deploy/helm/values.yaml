@@ -1,0 +1,56 @@
+image:
+  repository: ghcr.io/lee-mcfaul2/agent-gateway
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+
+replicas: 2
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2
+    memory: 2Gi
+
+namespace: gateway
+sandboxNamespace: sandbox
+
+opa:
+  image: openpolicyagent/opa:1.6.0
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+oidc:
+  issuer: ""
+  audience: ag-gateway
+
+tokenizer:
+  url: http://pii-tokenizer.platform.svc.cluster.local:8443
+
+bundle:
+  ref: ""
+  cosignSecretName: gateway-cosign-key
+  cosignSecretKey: cosign.pub
+
+audit:
+  databaseSecretName: gateway-audit-db
+  databaseSecretKey: dsn
+
+agentJob:
+  image: ghcr.io/lee-mcfaul2/agent-sandbox:0.1.0
+  timeoutSeconds: 300
+
+llmProviders:
+  anthropicSecretName: gateway-anthropic-key
+  anthropicSecretKey: api-key
+  openaiSecretName: gateway-openai-key
+  openaiSecretKey: api-key
+
+service:
+  port: 8000

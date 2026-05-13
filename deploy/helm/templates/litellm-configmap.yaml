@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-gateway-litellm
+  namespace: {{ .Values.namespace }}
+data:
+  litellm_config.yaml: |-
+{{ .Files.Get "litellm_config.yaml" | indent 4 }}
