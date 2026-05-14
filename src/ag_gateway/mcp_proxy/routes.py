@@ -160,6 +160,29 @@ def make_router(deps: Deps) -> APIRouter:
             res.body, request_uuid, deps.scrub_engine, deps.tokenizer
         )
 
+        # Outbound LLM Guard scan on the (scrubbed) response payload.
+        from ag_gateway.hooks.llm_guard import LLMGuardUnavailable
+        from ag_gateway.obs.metrics import OUTBOUND_LLM_GUARD_BLOCKS_TOTAL
+
+        text_for_scan = _flatten_text_for_scan(scrubbed)
+        try:
+            outbound = await deps.llm_guard.scan_outbound_mcp_response(
+                text_for_scan, request_uuid, mcp, tool
+            )
+        except LLMGuardUnavailable:
+            return wrap_error(
+                "OUTBOUND_LLM_GUARD_UNAVAILABLE", "llm_guard service unreachable",
+                mcp=mcp, tool=tool, request_uuid=request_uuid,
+            )
+
+        if outbound.action == "block":
+            OUTBOUND_LLM_GUARD_BLOCKS_TOTAL.labels(mcp=mcp, tool=tool).inc()
+            return wrap_error(
+                "OUTBOUND_BLOCKED", "llm_guard:" + ",".join(outbound.categories),
+                mcp=mcp, tool=tool, request_uuid=request_uuid,
+            )
+        # `flag` → audit only; no audit dep injected here yet
+
         TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="ok").inc()
         return wrap_success(scrubbed, mcp=mcp, tool=tool, request_uuid=request_uuid)
 
@@ -218,3 +241,21 @@ async def _scrub_response_recursive(
             for k, v in obj.items()
         }
     return obj
+
+
+def _flatten_text_for_scan(obj: Any) -> str:
+    """Concatenate string fields >= 8 chars from a payload for LLM Guard scanning."""
+    out: list[str] = []
+
+    def walk(o: Any) -> None:
+        if isinstance(o, str) and len(o) >= 8:
+            out.append(o)
+        elif isinstance(o, dict):
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+
+    walk(obj)
+    return "\n".join(out)

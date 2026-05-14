@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import respx
@@ -24,6 +24,15 @@ from ag_gateway.schemas.scrub_categories import ScrubCatalog
 from ag_gateway.schemas.validate import SchemaRegistry
 
 FIXTURE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundle-v1"
+
+
+def _allow_llm_guard() -> MagicMock:
+    """Return a MagicMock LLM Guard client whose outbound scan always allows."""
+    from ag_gateway.hooks.llm_guard import ScanResult
+
+    g = MagicMock()
+    g.scan_outbound_mcp_response = AsyncMock(return_value=ScanResult(action="allow"))
+    return g
 
 
 @pytest.fixture
@@ -104,7 +113,7 @@ def test_happy_path(fixtures: dict[str, Any]) -> None:
         opa=opa,
         scrub_engine=fixtures["engine"],
         bundle=BundleView.from_bundle(FIXTURE_BUNDLE),
-        llm_guard=MagicMock(),
+        llm_guard=_allow_llm_guard(),
     )
     app = FastAPI()
     app.include_router(make_router(deps))
@@ -177,3 +186,91 @@ def test_opa_deny(fixtures: dict[str, Any]) -> None:
     body = r.json()
     assert body["tool_result"]["ok"] is False
     assert body["tool_result"]["error"] == "OPA_DENY"
+
+
+@respx.mock
+def test_outbound_llm_guard_block_wraps_as_error(fixtures: dict[str, Any]) -> None:
+    from ag_gateway.hooks.llm_guard import ScanResult
+
+    tokenizer = TokenizerClient("http://tok:8443")
+    opa = OPAClient("http://opa:8181")
+    pool = MCPClientPool()
+
+    respx.post("http://opa:8181/v1/data/ag_gateway/authz/decision").mock(
+        return_value=Response(200, json={"result": {"allow": True, "reason": "ok"}})
+    )
+    respx.post("http://kb-mcp.mcp.svc.cluster.local:8443/v1/tools/search").mock(
+        return_value=Response(200, json={"rows": [{"id": "1", "title": "leaked secret"}]})
+    )
+
+    llm_guard = MagicMock()
+    llm_guard.scan_outbound_mcp_response = AsyncMock(
+        return_value=ScanResult(action="block", categories=["pii"], spans=[])
+    )
+
+    deps = Deps(
+        state=fixtures["state"],
+        mcps=fixtures["mcps"],
+        mcp_pool=pool,
+        schemas=fixtures["schemas"],
+        tokenizer=tokenizer,
+        opa=opa,
+        scrub_engine=fixtures["engine"],
+        bundle=BundleView.from_bundle(FIXTURE_BUNDLE),
+        llm_guard=llm_guard,
+    )
+    app = FastAPI()
+    app.include_router(make_router(deps))
+    client = TestClient(app)
+
+    r = client.post(
+        "/v1/mcp/kb/search",
+        json={"request_uuid": "11111111-1111-1111-1111-111111111111", "args": {"q": "x"}},
+    )
+    body = r.json()
+    assert body["tool_result"]["ok"] is False
+    assert body["tool_result"]["error"] == "OUTBOUND_BLOCKED"
+
+
+@respx.mock
+def test_outbound_llm_guard_unavailable_wraps_as_error(fixtures: dict[str, Any]) -> None:
+    from ag_gateway.hooks.llm_guard import LLMGuardUnavailable
+
+    tokenizer = TokenizerClient("http://tok:8443")
+    opa = OPAClient("http://opa:8181")
+    pool = MCPClientPool()
+
+    respx.post("http://opa:8181/v1/data/ag_gateway/authz/decision").mock(
+        return_value=Response(200, json={"result": {"allow": True, "reason": "ok"}})
+    )
+    respx.post("http://kb-mcp.mcp.svc.cluster.local:8443/v1/tools/search").mock(
+        return_value=Response(200, json={"rows": []})
+    )
+
+    llm_guard = MagicMock()
+    llm_guard.scan_outbound_mcp_response = AsyncMock(
+        side_effect=LLMGuardUnavailable("network error")
+    )
+
+    deps = Deps(
+        state=fixtures["state"],
+        mcps=fixtures["mcps"],
+        mcp_pool=pool,
+        schemas=fixtures["schemas"],
+        tokenizer=tokenizer,
+        opa=opa,
+        scrub_engine=fixtures["engine"],
+        bundle=BundleView.from_bundle(FIXTURE_BUNDLE),
+        llm_guard=llm_guard,
+    )
+    app = FastAPI()
+    app.include_router(make_router(deps))
+    client = TestClient(app)
+
+    r = client.post(
+        "/v1/mcp/kb/search",
+        json={"request_uuid": "11111111-1111-1111-1111-111111111111", "args": {"q": "x"}},
+    )
+    body = r.json()
+    assert body["tool_result"]["ok"] is False
+    assert body["tool_result"]["error"] == "OUTBOUND_LLM_GUARD_UNAVAILABLE"
