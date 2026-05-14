@@ -153,6 +153,47 @@ MCP_STATE = Gauge(
 )
 
 
+# --- LLM Guard integration ---
+LLM_GUARD_ENABLED = Gauge(
+    "gateway_llm_guard_enabled",
+    "1 if LLM Guard scanning is enabled in config, 0 if explicitly disabled. "
+    "Production deployments must alert on 0.",
+    registry=REGISTRY,
+)
+LLM_GUARD_DISABLED_TOTAL = Counter(
+    "gateway_llm_guard_disabled_total",
+    "Scan calls that returned allow because LLM Guard is config-disabled.",
+    labelnames=("direction",),
+    registry=REGISTRY,
+)
+LLM_GUARD_UNAVAILABLE_TOTAL = Counter(
+    "gateway_llm_guard_unavailable_total",
+    "Scan calls that failed because LLM Guard was enabled but unreachable.",
+    labelnames=("direction",),
+    registry=REGISTRY,
+)
+OUTBOUND_LLM_GUARD_BLOCKS_TOTAL = Counter(
+    "gateway_outbound_llm_guard_blocks_total",
+    "Outbound MCP-response scans that returned block.",
+    labelnames=("mcp", "tool"),
+    registry=REGISTRY,
+)
+
+# --- Sandbox terminate envelope metrics ---
+SANDBOX_FINISH_REASON_TOTAL = Counter(
+    "gateway_sandbox_finish_reason_total",
+    "Final finish_reason from the sandbox terminate envelope.",
+    labelnames=("reason",),
+    registry=REGISTRY,
+)
+SANDBOX_RESPONSE_SCHEMA_MISMATCH_TOTAL = Counter(
+    "gateway_sandbox_response_schema_mismatch_total",
+    "Sandbox aborted because a gateway tool response failed schema validation. Paging-class.",
+    labelnames=("mcp", "tool"),
+    registry=REGISTRY,
+)
+
+
 def render_text() -> bytes:
     """Render the current registry in Prometheus exposition format."""
     return generate_latest(REGISTRY)
