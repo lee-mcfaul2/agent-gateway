@@ -54,3 +54,21 @@ llmProviders:
 
 service:
   port: 8000
+
+# LLM Guard sibling-service integration.
+# Default: enabled=true. base_url MUST be set in production deployments; the
+# gateway boot will fail otherwise (fail-closed). To disable for dev only,
+# explicitly set enabled=false and accept that prompt-injection scanning is off.
+llm_guard:
+  enabled: true
+  base_url: ""
+  timeout_seconds: 2.0
+
+# Models the gateway will route through LiteLLM. Caller may request any of these
+# via the `model` field; otherwise default_model is used.
+models:
+  default_model: "claude-sonnet-4-6"
+  allowed_models: "claude-sonnet-4-6,claude-opus-4-7,gpt-4o"
+
+# Gateway's own MCP-proxy URL, exposed to sandboxes via GATEWAY_MCP_URL env.
+gateway_mcp_internal_url: "http://agent-gateway.gateway.svc.cluster.local:8080"
