@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import Field, HttpUrl, PostgresDsn
+from pydantic import Field, HttpUrl, PostgresDsn, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -50,7 +50,62 @@ class Settings(BaseSettings):
     quarantine_snapshot_max_bytes: int = 256 * 1024
     quarantine_retention_days: int = 90
 
+    # LLM Guard — fail-closed: enabled by default; requires base_url when enabled
+    llm_guard_enabled: bool = True
+    llm_guard_base_url: str = ""
+    llm_guard_timeout_seconds: float = 2.0
+
+    # LLM routing
+    default_model: str = "claude-sonnet-4-6"
+    allowed_models: tuple[str, ...] = ("claude-sonnet-4-6", "claude-opus-4-7", "gpt-4o")
+
+    @model_validator(mode="after")
+    def _llm_guard_fail_closed(self) -> "Settings":
+        if self.llm_guard_enabled and not self.llm_guard_base_url:
+            raise ValueError(
+                "LLM_GUARD config error: GATEWAY_LLM_GUARD_ENABLED=true requires "
+                "GATEWAY_LLM_GUARD_BASE_URL to be set. Set base_url, or explicitly disable "
+                "with GATEWAY_LLM_GUARD_ENABLED=false (dev only — security control disabled)."
+            )
+        return self
+
 
 def load_settings() -> Settings:
     """Load and validate settings. Raises ValidationError on missing/bad config."""
     return Settings()  # type: ignore[call-arg]
+
+
+class Config:
+    """Thin wrapper around Settings exposing a from_env() classmethod.
+
+    Raises ValueError (not ValidationError) on LLM Guard misconfiguration so
+    callers can catch ValueError directly — consistent with the fail-closed
+    contract documented in the task spec.
+    """
+
+    def __init__(self, settings: Settings) -> None:
+        self._settings = settings
+
+    # --- proxy all Settings attributes ---
+    def __getattr__(self, name: str) -> object:
+        return getattr(self._settings, name)
+
+    @classmethod
+    def from_env(cls) -> "Config":
+        """Load settings from the environment and return a Config instance.
+
+        Raises ValueError if LLM Guard is enabled but no base URL is provided.
+        """
+        from pydantic import ValidationError
+
+        try:
+            s = Settings()  # type: ignore[call-arg]
+        except ValidationError as exc:
+            # Re-raise LLM Guard failures as plain ValueError so tests can
+            # match on ValueError / "LLM_GUARD".  All other validation errors
+            # propagate as ValidationError (same behaviour as load_settings).
+            for err in exc.errors():
+                if "LLM_GUARD" in str(err.get("msg", "")):
+                    raise ValueError(str(err["msg"])) from exc
+            raise
+        return cls(s)
