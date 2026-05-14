@@ -6,6 +6,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+import referencing
+import referencing.jsonschema as _rjs
 from jsonschema import Draft202012Validator
 
 from ag_gateway.obs.metrics import SCHEMA_FAILURES_TOTAL
@@ -59,3 +61,56 @@ def validate_against(schema: dict[str, Any], payload: Any) -> str | None:
     v = Draft202012Validator(schema)
     errors = sorted(v.iter_errors(payload), key=lambda e: list(e.absolute_path))
     return errors[0].message if errors else None
+
+
+# ---------------------------------------------------------------------------
+# Compiled-schema validator (used by BundleView and callers that need $ref
+# resolution against a set of shared schemas).
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class SchemaValidator:
+    """Thin wrapper around a compiled Draft202012Validator. Thread-safe; immutable."""
+
+    _validator: Draft202012Validator
+
+    def validate(self, instance: Any) -> str | None:
+        """Return None on success, or a human-readable error string on failure."""
+        errors = list(self._validator.iter_errors(instance))
+        if not errors:
+            return None
+        return "; ".join(
+            f"{list(e.path)}: {e.message}" if list(e.path) else e.message
+            for e in errors
+        )
+
+
+def compile_schema(
+    doc: dict[str, Any],
+    shared_resources: dict[str, dict[str, Any]] | None = None,
+) -> SchemaValidator:
+    """Compile *doc* into a SchemaValidator, resolving $refs via *shared_resources*.
+
+    *shared_resources* maps relative keys (e.g. ``"shared/uuid.json"``) to their
+    parsed schema dicts.  Each dict must contain a ``$id`` URI that is the canonical
+    reference target used by the schemas under compilation.
+    """
+    if shared_resources:
+        resource_pairs = []
+        for _key, schema_doc in shared_resources.items():
+            id_ = schema_doc.get("$id")
+            if id_:
+                resource_pairs.append(
+                    (
+                        id_,
+                        referencing.Resource.from_contents(
+                            schema_doc,
+                            default_specification=_rjs.DRAFT202012,
+                        ),
+                    )
+                )
+        registry = referencing.Registry().with_resources(resource_pairs)
+        validator = Draft202012Validator(doc, registry=registry)
+    else:
+        validator = Draft202012Validator(doc)
+    return SchemaValidator(_validator=validator)
