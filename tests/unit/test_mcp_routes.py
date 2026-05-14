@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 import respx
@@ -18,8 +19,11 @@ from ag_gateway.mcp_proxy.client import MCPClientPool
 from ag_gateway.mcp_proxy.registry import MCPRegistry
 from ag_gateway.mcp_proxy.request_state import RequestContext, RequestStateStore
 from ag_gateway.mcp_proxy.routes import Deps, make_router
+from ag_gateway.prompts.bundle_view import BundleView
 from ag_gateway.schemas.scrub_categories import ScrubCatalog
 from ag_gateway.schemas.validate import SchemaRegistry
+
+FIXTURE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundle-v1"
 
 
 @pytest.fixture
@@ -104,6 +108,8 @@ def test_happy_path(fixtures: dict[str, Any]) -> None:
         tokenizer=tokenizer,
         opa=opa,
         scrub_engine=fixtures["engine"],
+        bundle=BundleView.from_bundle(FIXTURE_BUNDLE),
+        llm_guard=MagicMock(),
     )
     app = FastAPI()
     app.include_router(make_router(deps))
@@ -129,6 +135,8 @@ def test_uuid_mismatch_stale(fixtures: dict[str, Any]) -> None:
         tokenizer=TokenizerClient("http://tok:8443"),
         opa=OPAClient("http://opa:8181"),
         scrub_engine=fixtures["engine"],
+        bundle=BundleView.from_bundle(FIXTURE_BUNDLE),
+        llm_guard=MagicMock(),
     )
     app = FastAPI()
     app.include_router(make_router(deps))
@@ -160,6 +168,8 @@ def test_opa_deny(fixtures: dict[str, Any]) -> None:
         tokenizer=TokenizerClient("http://tok:8443"),
         opa=OPAClient("http://opa:8181"),
         scrub_engine=fixtures["engine"],
+        bundle=BundleView.from_bundle(FIXTURE_BUNDLE),
+        llm_guard=MagicMock(),
     )
     app = FastAPI()
     app.include_router(make_router(deps))

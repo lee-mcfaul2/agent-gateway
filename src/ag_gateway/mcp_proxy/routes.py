@@ -15,6 +15,7 @@ from ag_gateway.mcp_proxy.client import CallFail, MCPClientPool
 from ag_gateway.mcp_proxy.registry import MCPRegistry
 from ag_gateway.mcp_proxy.request_state import RequestStateStore
 from ag_gateway.obs.metrics import TOOL_CALLS_TOTAL, UUID_MISMATCH_TOTAL
+from ag_gateway.prompts.bundle_view import BundleView
 from ag_gateway.schemas.validate import SchemaRegistry
 
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
@@ -33,6 +34,8 @@ class Deps:
         tokenizer: TokenizerClient,
         opa: OPAClient,
         scrub_engine: ScrubEngine,
+        bundle: BundleView,
+        llm_guard,
     ) -> None:
         self.state = state
         self.mcps = mcps
@@ -41,10 +44,16 @@ class Deps:
         self.tokenizer = tokenizer
         self.opa = opa
         self.scrub_engine = scrub_engine
+        self.bundle = bundle
+        self.llm_guard = llm_guard
 
 
 def make_router(deps: Deps) -> APIRouter:
     router = APIRouter()
+
+    @router.get("/v1/bundle_digest")
+    async def bundle_digest() -> dict[str, str]:
+        return {"digest": deps.bundle.digest}
 
     @router.post("/v1/mcp/{mcp}/{tool}")
     async def call_tool(
