@@ -55,10 +55,17 @@ class AgentJobLauncher:
 
     async def launch_and_wait(
         self,
+        *,
         request_uuid: str,
         prompt_uuid: str,
         litellm_url: str,
+        gateway_mcp_url: str,
         tokenized_user_input: str,
+        available_tools: list[str],
+        model: str,
+        max_iterations: int,
+        wallclock_timeout_seconds: int,
+        traceparent: str,
     ) -> JobResult:
         name = f"agent-{request_uuid[:8]}-{_uuid.uuid4().hex[:6]}"
         spec = JobSpec(
@@ -69,9 +76,15 @@ class AgentJobLauncher:
                 "REQUEST_UUID": request_uuid,
                 "PROMPT_UUID": prompt_uuid,
                 "LITELLM_URL": litellm_url,
+                "GATEWAY_MCP_URL": gateway_mcp_url,
+                "AVAILABLE_TOOLS": ",".join(available_tools),
                 "TOKENIZED_USER_INPUT": tokenized_user_input,
+                "MODEL": model,
+                "MAX_ITERATIONS": str(max_iterations),
+                "WALLCLOCK_TIMEOUT_SECONDS": str(wallclock_timeout_seconds),
+                "TRACEPARENT": traceparent,
             },
-            timeout_seconds=self._timeout,
+            timeout_seconds=min(wallclock_timeout_seconds + 30, self._timeout),
         )
 
         try:
