@@ -21,7 +21,9 @@ async def test_scan_inbound_allow():
 @respx.mock
 async def test_scan_inbound_block():
     respx.post("http://llm-guard/scan").mock(
-        return_value=Response(200, json={"action": "block", "categories": ["prompt_injection"], "spans": []})
+        return_value=Response(
+            200, json={"action": "block", "categories": ["prompt_injection"], "spans": []}
+        )
     )
     client = LLMGuardClient(base_url="http://llm-guard", timeout_seconds=2.0, enabled=True)
     result = await client.scan_inbound("malicious", "req-1")

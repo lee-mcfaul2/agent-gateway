@@ -41,7 +41,11 @@ class MCPRegistry:
             )
             registry._by_name[entry.name] = entry
             registry._state[entry.name] = "unknown"
-        log.info("mcp_registry.loaded", count=len(registry._by_name), version=registry._bundle_version)
+        log.info(
+            "mcp_registry.loaded",
+            count=len(registry._by_name),
+            version=registry._bundle_version,
+        )
         return registry
 
     def get(self, name: str) -> MCPEntry:

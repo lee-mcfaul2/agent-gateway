@@ -21,8 +21,8 @@ def test_uuid_mismatch_counter_present() -> None:
 
 def test_llm_guard_metrics_exist():
     from ag_gateway.obs.metrics import (
-        LLM_GUARD_ENABLED,
         LLM_GUARD_DISABLED_TOTAL,
+        LLM_GUARD_ENABLED,
         LLM_GUARD_UNAVAILABLE_TOTAL,
         OUTBOUND_LLM_GUARD_BLOCKS_TOTAL,
     )

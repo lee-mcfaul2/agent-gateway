@@ -139,7 +139,6 @@ async def test_no_terminate_in_logs_raises() -> None:
 def test_launcher_passes_full_env_set(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify all 10 env vars are populated on the Job spec."""
     import asyncio
-
     from unittest.mock import MagicMock
 
     batch_api = MagicMock()
@@ -207,7 +206,6 @@ def test_launcher_passes_full_env_set(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_wallclock_timeout_sets_active_deadline(monkeypatch: pytest.MonkeyPatch) -> None:
     """activeDeadlineSeconds == wallclock_timeout_seconds + 30."""
     import asyncio
-
     from unittest.mock import MagicMock
 
     batch_api = MagicMock()
@@ -252,7 +250,6 @@ def test_wallclock_timeout_sets_active_deadline(monkeypatch: pytest.MonkeyPatch)
 def test_available_tools_joined(monkeypatch: pytest.MonkeyPatch) -> None:
     """AVAILABLE_TOOLS env var is a comma-joined string of the list."""
     import asyncio
-
     from unittest.mock import MagicMock
 
     batch_api = MagicMock()

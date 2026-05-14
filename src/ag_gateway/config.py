@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     allowed_models: tuple[str, ...] = ("claude-sonnet-4-6", "claude-opus-4-7", "gpt-4o")
 
     @model_validator(mode="after")
-    def _llm_guard_fail_closed(self) -> "Settings":
+    def _llm_guard_fail_closed(self) -> Settings:
         if self.llm_guard_enabled and not self.llm_guard_base_url:
             raise ValueError(
                 "LLM_GUARD config error: GATEWAY_LLM_GUARD_ENABLED=true requires "
@@ -90,12 +90,21 @@ class Config:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
 
-    # --- proxy all Settings attributes ---
+    # --- typed properties for attributes used in type-checked code ---
+    @property
+    def allowed_models(self) -> tuple[str, ...]:
+        return self._settings.allowed_models
+
+    @property
+    def default_model(self) -> str:
+        return self._settings.default_model
+
+    # --- proxy remaining Settings attributes ---
     def __getattr__(self, name: str) -> object:
         return getattr(self._settings, name)
 
     @classmethod
-    def from_env(cls) -> "Config":
+    def from_env(cls) -> Config:
         """Load settings from the environment and return a Config instance.
 
         Raises ValueError if LLM Guard is enabled but no base URL is provided.

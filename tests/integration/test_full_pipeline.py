@@ -74,10 +74,9 @@ async def test_tokenizer_mock_init(integration_stack: dict[str, str]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_bundle_manifest_v1_shape(bundle_v1_root: "pathlib.Path") -> None:  # noqa: F821
+def test_bundle_manifest_v1_shape(bundle_v1_root: pathlib.Path) -> None:  # noqa: F821
     """The fixture bundle has the canonical v1.0 manifest shape expected by MCPRegistry."""
     import json
-    import pathlib
 
     manifest = json.loads((bundle_v1_root / "bundle-manifest.json").read_text())
     # Top-level version fields
@@ -126,10 +125,9 @@ def test_sandbox_env_var_set() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_user_prompt_schema_required_fields(bundle_v1_root: "pathlib.Path") -> None:  # noqa: F821
+def test_user_prompt_schema_required_fields(bundle_v1_root: pathlib.Path) -> None:  # noqa: F821
     """The user-prompt.json schema mandates the v1.0 required fields."""
     import json
-    import pathlib
 
     schema = json.loads(
         (bundle_v1_root / "schemas" / "user-prompt.json").read_text()

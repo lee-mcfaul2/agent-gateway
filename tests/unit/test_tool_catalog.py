@@ -5,7 +5,6 @@ from pathlib import Path
 from ag_gateway.prompts.bundle_view import BundleView
 from ag_gateway.tools.catalog import compute_available_tools
 
-
 FIXTURE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundle-v1"
 
 

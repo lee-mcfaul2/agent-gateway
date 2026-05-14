@@ -13,6 +13,7 @@ from ag_gateway.config import Config, load_settings
 from ag_gateway.hooks.audit import AuditLogger
 from ag_gateway.hooks.auth_oidc import OIDCValidator
 from ag_gateway.hooks.cost_cap import CostMeter
+from ag_gateway.hooks.llm_guard import LLMGuardClient
 from ag_gateway.hooks.opa_client import OPAClient
 from ag_gateway.hooks.scrub_engine import ScrubEngine
 from ag_gateway.hooks.tokenizer_client import TokenizerClient
@@ -28,7 +29,6 @@ from ag_gateway.obs.logging import get_logger, setup_logging
 from ag_gateway.obs.metrics import LLM_GUARD_ENABLED, render_text
 from ag_gateway.obs.quarantine import QuarantineStore
 from ag_gateway.obs.tracing import setup_tracing, shutdown_tracing
-from ag_gateway.hooks.llm_guard import LLMGuardClient
 from ag_gateway.prompts.bundle import pull_and_verify
 from ag_gateway.prompts.bundle_view import BundleView
 from ag_gateway.schemas.scrub_categories import ScrubCatalog

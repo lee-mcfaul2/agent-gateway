@@ -18,7 +18,9 @@ def bundle_v1(tmp_path: Path) -> Path:
             "source_commit": "abcdef0",
             "builder_id": "test",
         },
-        "envelope_cost_caps": {"max_iterations": 8, "max_wallclock_ms": 300000, "max_cost_usd": 1.0},
+        "envelope_cost_caps": {
+            "max_iterations": 8, "max_wallclock_ms": 300000, "max_cost_usd": 1.0
+        },
         "services": [
             {
                 "mcp": "kb",

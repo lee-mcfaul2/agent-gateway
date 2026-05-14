@@ -6,6 +6,7 @@ from typing import Any, cast
 from fastapi import APIRouter, Header, Request
 
 from ag_gateway.hooks.envelope import wrap_error, wrap_success
+from ag_gateway.hooks.llm_guard import LLMGuardClient
 from ag_gateway.hooks.opa_authz import check as opa_check
 from ag_gateway.hooks.opa_client import OPAClient
 from ag_gateway.hooks.scrub_engine import ScrubEngine
@@ -35,7 +36,7 @@ class Deps:
         opa: OPAClient,
         scrub_engine: ScrubEngine,
         bundle: BundleView,
-        llm_guard,
+        llm_guard: LLMGuardClient,
     ) -> None:
         self.state = state
         self.mcps = mcps

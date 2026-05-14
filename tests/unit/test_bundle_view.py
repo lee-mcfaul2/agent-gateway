@@ -6,7 +6,6 @@ import pytest
 
 from ag_gateway.prompts.bundle_view import BundleView, ToolEntry
 
-
 FIXTURE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundle-v1"
 
 

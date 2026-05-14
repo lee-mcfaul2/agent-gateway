@@ -56,7 +56,7 @@ class BundleView:
 
         # Shared schemas (e.g. uuid.json) for $ref resolution.
         shared_dir = root / "schemas" / "shared"
-        shared_resources: dict[str, dict] = {}
+        shared_resources: dict[str, dict[str, object]] = {}
         if shared_dir.exists():
             for p in sorted(shared_dir.glob("*.json")):
                 shared_resources[f"shared/{p.name}"] = json.loads(p.read_text())

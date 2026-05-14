@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import time
 import uuid as _uuid
 from dataclasses import dataclass
@@ -150,10 +151,8 @@ def make_router(deps: IngressDeps) -> APIRouter:
                     snapshot={},
                 )
             )
-            try:
+            with contextlib.suppress(Exception):
                 await deps.tokenizer.release_request(request_uuid)
-            except Exception:
-                pass
             raise HTTPException(
                 status_code=503,
                 detail=_error(
@@ -182,10 +181,8 @@ def make_router(deps: IngressDeps) -> APIRouter:
                     payload={"categories": inbound.categories},
                 )
             )
-            try:
+            with contextlib.suppress(Exception):
                 await deps.tokenizer.release_request(request_uuid)
-            except Exception:
-                pass
             raise HTTPException(
                 status_code=400,
                 detail=_error(
@@ -194,7 +191,7 @@ def make_router(deps: IngressDeps) -> APIRouter:
                     ",".join(inbound.categories),
                 ),
             )
-        elif inbound.action == "flag":
+        if inbound.action == "flag":
             await deps.audit.log(
                 AuditEvent(
                     event_type="llm_guard_flag",
@@ -212,10 +209,8 @@ def make_router(deps: IngressDeps) -> APIRouter:
                 user_text, request_uuid, deps.scrub_engine, deps.tokenizer
             )
         except TokenizerUnavailable as exc:
-            try:
+            with contextlib.suppress(Exception):
                 await deps.tokenizer.release_request(request_uuid)
-            except Exception:
-                pass
             raise HTTPException(
                 status_code=503,
                 detail=_error(
@@ -257,10 +252,8 @@ def make_router(deps: IngressDeps) -> APIRouter:
         cfg = deps.config
         if requested_model:
             if requested_model not in cfg.allowed_models:
-                try:
+                with contextlib.suppress(Exception):
                     await deps.tokenizer.release_request(request_uuid)
-                except Exception:
-                    pass
                 raise HTTPException(
                     status_code=400,
                     detail=_error("MODEL_NOT_ALLOWED", 400, requested_model),

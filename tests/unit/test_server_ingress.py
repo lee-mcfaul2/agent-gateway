@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import respx
@@ -13,12 +12,11 @@ from httpx import Response
 from ag_gateway.hooks.audit import AuditEvent
 from ag_gateway.hooks.auth_oidc import JWTValidationError, UserClaims
 from ag_gateway.hooks.cost_cap import CostMeter
-from ag_gateway.hooks.llm_guard import LLMGuardClient, LLMGuardUnavailable, ScanResult
+from ag_gateway.hooks.llm_guard import LLMGuardUnavailable, ScanResult
 from ag_gateway.hooks.scrub_engine import ScrubEngine
 from ag_gateway.hooks.tokenizer_client import TokenizerClient
 from ag_gateway.jobs.launcher import JobResult
 from ag_gateway.mcp_proxy.request_state import RequestStateStore
-from ag_gateway.obs.quarantine import QuarantineStore
 from ag_gateway.prompts.bundle_view import BundleView
 from ag_gateway.schemas.scrub_categories import ScrubCatalog
 from ag_gateway.server_ingress import IngressDeps, make_router

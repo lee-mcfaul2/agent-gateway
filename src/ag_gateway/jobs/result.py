@@ -12,7 +12,7 @@ class TerminateInvalid(Exception):
     pass
 
 
-class FinishReason(str, enum.Enum):
+class FinishReason(enum.StrEnum):
     TERMINATE = "terminate"
     ITERATION_CAP = "iteration_cap"
     WALLCLOCK_TIMEOUT = "wallclock_timeout"
@@ -69,7 +69,9 @@ def extract_terminate(view: BundleView, raw: dict[str, Any]) -> TerminateResult:
     tokens = None
     if body.get("tokens_used"):
         t = body["tokens_used"]
-        tokens = TokensUsed(prompt=int(t["prompt"]), completion=int(t["completion"]), total=int(t["total"]))
+        tokens = TokensUsed(
+            prompt=int(t["prompt"]), completion=int(t["completion"]), total=int(t["total"])
+        )
     err_block = None
     if body.get("error"):
         e = body["error"]

@@ -27,7 +27,7 @@ log = get_logger(__name__)
 class ScanResult:
     action: Literal["allow", "flag", "block"]
     categories: list[str] = field(default_factory=list)
-    spans: list[dict] = field(default_factory=list)
+    spans: list[dict[str, object]] = field(default_factory=list)
 
 
 class LLMGuardUnavailable(Exception):

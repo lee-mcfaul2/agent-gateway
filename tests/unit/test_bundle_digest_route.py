@@ -9,7 +9,6 @@ from fastapi.testclient import TestClient
 from ag_gateway.mcp_proxy.routes import Deps, make_router
 from ag_gateway.prompts.bundle_view import BundleView
 
-
 FIXTURE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundle-v1"
 
 
