@@ -28,25 +28,20 @@ FIXTURE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundle-v1"
 
 @pytest.fixture
 def fixtures(tmp_path: Path) -> dict[str, Any]:
-    mcp_dir = tmp_path / "mcps"
-    mcp_dir.mkdir()
-    (mcp_dir / "catalog.json").write_text(
-        json.dumps(
-            {
-                "mcps": [
-                    {
-                        "name": "kb",
-                        "spiffe": "spiffe://x/kb",
-                        "schema_version": "v1",
-                        "schema_digest": "sha256:abc",
-                    }
-                ]
-            }
-        )
-    )
+    (tmp_path / "bundle-manifest.json").write_text(json.dumps({
+        "bundle_version": "1.0.0",
+        "schema_library_version": "1.0.0",
+        "build": {"timestamp": "2026-05-14T00:00:00Z", "source_commit": "abcdef0", "builder_id": "test"},
+        "envelope_cost_caps": {"max_iterations": 8, "max_wallclock_ms": 300000, "max_cost_usd": 1.0},
+        "services": [
+            {"mcp": "kb", "tools": [
+                {"name": "search", "request_digest": "sha256:" + "a"*64, "response_digest": "sha256:" + "b"*64, "requires_permissions": ["kb:read"]}
+            ]}
+        ],
+    }))
     mcps = MCPRegistry.from_bundle(tmp_path)
 
-    schemas_dir = tmp_path / "schemas" / "kb" / "v1"
+    schemas_dir = tmp_path / "schemas" / "kb" / "1.0.0"
     schemas_dir.mkdir(parents=True)
     (schemas_dir / "search.request.json").write_text(
         json.dumps({"type": "object", "properties": {"q": {"type": "string"}}, "required": ["q"]})

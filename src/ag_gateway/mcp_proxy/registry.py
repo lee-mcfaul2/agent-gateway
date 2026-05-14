@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from ag_gateway.obs.logging import get_logger
 from ag_gateway.obs.metrics import MCP_STATE
+
+log = get_logger(__name__)
 
 MCPState = Literal["healthy", "degraded", "unknown"]
 
@@ -14,40 +17,32 @@ MCPState = Literal["healthy", "degraded", "unknown"]
 @dataclass(frozen=True)
 class MCPEntry:
     name: str
-    spiffe: str
-    schema_version: str
-    schema_digest: str
-    requires_permissions: tuple[str, ...] = ()
-    severity_class: str = "normal"
+    schema_version: str  # bundle_version — what version of the bundle this MCP was indexed from
 
 
 class MCPRegistry:
-    """Catalog of MCPs declared in the bundle. State (healthy/degraded) is mutable."""
+    """Catalog of MCPs known to this gateway, derived from the v1.0 bundle manifest."""
 
-    def __init__(self, entries: list[MCPEntry]) -> None:
-        self._by_name: dict[str, MCPEntry] = {e.name: e for e in entries}
-        self._state: dict[str, MCPState] = {e.name: "unknown" for e in entries}
+    def __init__(self) -> None:
+        self._by_name: dict[str, MCPEntry] = {}
+        self._bundle_version: str = ""
+        self._state: dict[str, MCPState] = {}
         self._lock = threading.RLock()
 
     @classmethod
     def from_bundle(cls, bundle_root: Path) -> MCPRegistry:
-        path = bundle_root / "mcps" / "catalog.json"
-        if not path.exists():
-            raise FileNotFoundError(f"mcp catalog not found: {path}")
-        with path.open("r", encoding="utf-8") as f:
-            doc = json.load(f)
-        entries = [
-            MCPEntry(
-                name=str(e["name"]),
-                spiffe=str(e["spiffe"]),
-                schema_version=str(e["schema_version"]),
-                schema_digest=str(e["schema_digest"]),
-                requires_permissions=tuple(e.get("requires_permissions", ())),
-                severity_class=str(e.get("severity_class", "normal")),
+        manifest = json.loads((bundle_root / "bundle-manifest.json").read_text())
+        registry = cls()
+        registry._bundle_version = str(manifest["bundle_version"])
+        for svc in manifest.get("services", []):
+            entry = MCPEntry(
+                name=str(svc["mcp"]),
+                schema_version=registry._bundle_version,
             )
-            for e in doc.get("mcps", [])
-        ]
-        return cls(entries)
+            registry._by_name[entry.name] = entry
+            registry._state[entry.name] = "unknown"
+        log.info("mcp_registry.loaded", count=len(registry._by_name), version=registry._bundle_version)
+        return registry
 
     def get(self, name: str) -> MCPEntry:
         return self._by_name[name]
