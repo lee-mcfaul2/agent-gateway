@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ag_gateway.hooks.auth_oidc import UserClaims
-from ag_gateway.prompts.registry import Prompt
 
 
 @dataclass(frozen=True)
 class RequestContext:
     user_claims: UserClaims
-    prompt: Prompt
+    jwt: str
+    prompt_uuid: str
     spiffe_id: str
     created_at: float
-    jwt: str
+    available_tools: list[str] = field(default_factory=list)
 
 
 class RequestStateStore:

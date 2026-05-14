@@ -18,7 +18,6 @@ from ag_gateway.mcp_proxy.client import MCPClientPool
 from ag_gateway.mcp_proxy.registry import MCPRegistry
 from ag_gateway.mcp_proxy.request_state import RequestContext, RequestStateStore
 from ag_gateway.mcp_proxy.routes import Deps, make_router
-from ag_gateway.prompts.registry import Prompt
 from ag_gateway.schemas.scrub_categories import ScrubCatalog
 from ag_gateway.schemas.validate import SchemaRegistry
 
@@ -64,15 +63,15 @@ def fixtures(tmp_path: Path) -> dict[str, Any]:
     engine = ScrubEngine(ScrubCatalog.from_bundle(tmp_path), presidio=_Stub())  # type: ignore[arg-type]
 
     state = RequestStateStore()
-    prompt = Prompt(uuid="22222222-2222-2222-2222-222222222222", name="p", body={})
     state.put(
         "11111111-1111-1111-1111-111111111111",
         RequestContext(
             user_claims=UserClaims(sub="alice", permissions=("kb:read",)),
-            prompt=prompt,
+            prompt_uuid="22222222-2222-2222-2222-222222222222",
             spiffe_id="spiffe://x/job-1",
             created_at=__import__("time").time(),
             jwt="test.jwt.token",
+            available_tools=["kb.search"],
         ),
     )
 
