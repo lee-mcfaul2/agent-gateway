@@ -10,6 +10,13 @@ import httpx
 import pytest
 
 COMPOSE_FILE = Path(__file__).parent / "compose.yaml"
+BUNDLE_V1_ROOT = Path(__file__).parent.parent / "fixtures" / "bundle-v1"
+
+
+@pytest.fixture(scope="session")
+def bundle_v1_root() -> Path:
+    """Return the path to the canonical v1.0 test bundle fixture."""
+    return BUNDLE_V1_ROOT
 
 
 @pytest.fixture(scope="session")

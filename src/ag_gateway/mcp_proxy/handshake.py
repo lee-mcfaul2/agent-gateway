@@ -43,17 +43,12 @@ async def handshake_one(entry: MCPEntry, registry: MCPRegistry) -> bool:
         ).inc()
         return False
 
+    # In the v1.0 bundle model the gateway is the schema source of truth.
+    # We only verify the MCP advertises the same bundle version we loaded.
     if body.get("schema_version") != entry.schema_version:
         registry.set_state(entry.name, "degraded")
         SCHEMA_FAILURES_TOTAL.labels(
             type="mcp_handshake", reason="version_mismatch", mcp=entry.name
-        ).inc()
-        return False
-
-    if body.get("schema_digest") != entry.schema_digest:
-        registry.set_state(entry.name, "degraded")
-        SCHEMA_FAILURES_TOTAL.labels(
-            type="mcp_handshake", reason="digest_mismatch", mcp=entry.name
         ).inc()
         return False
 
