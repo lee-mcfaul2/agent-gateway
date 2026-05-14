@@ -40,6 +40,10 @@ class Settings(BaseSettings):
 
     # LiteLLM
     llm_providers_config: str = "/etc/gateway/litellm_config.yaml"
+    litellm_internal_url: str = "http://localhost:4000"
+
+    # Internal service URLs
+    gateway_mcp_internal_url: str = "http://agent-gateway.gateway.svc.cluster.local:8080"
 
     # Telemetry
     log_level: str = "info"

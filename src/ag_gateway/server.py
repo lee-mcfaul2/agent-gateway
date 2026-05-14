@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse, Response
 from kubernetes import client as k8s_client
 
-from ag_gateway.config import load_settings
+from ag_gateway.config import Config, load_settings
 from ag_gateway.hooks.audit import AuditLogger
 from ag_gateway.hooks.auth_oidc import OIDCValidator
 from ag_gateway.hooks.cost_cap import CostMeter
@@ -25,11 +25,12 @@ from ag_gateway.mcp_proxy.request_state import RequestStateStore
 from ag_gateway.mcp_proxy.routes import Deps as MCPDeps
 from ag_gateway.mcp_proxy.routes import make_router as make_mcp_router
 from ag_gateway.obs.logging import get_logger, setup_logging
-from ag_gateway.obs.metrics import render_text
+from ag_gateway.obs.metrics import LLM_GUARD_ENABLED, render_text
 from ag_gateway.obs.quarantine import QuarantineStore
 from ag_gateway.obs.tracing import setup_tracing, shutdown_tracing
+from ag_gateway.hooks.llm_guard import LLMGuardClient
 from ag_gateway.prompts.bundle import pull_and_verify
-from ag_gateway.prompts.registry import PromptRegistry
+from ag_gateway.prompts.bundle_view import BundleView
 from ag_gateway.schemas.scrub_categories import ScrubCatalog
 from ag_gateway.schemas.validate import SchemaRegistry
 from ag_gateway.server_ingress import IngressDeps
@@ -40,6 +41,7 @@ log = get_logger(__name__)
 
 async def build_app() -> tuple[FastAPI, dict[str, object]]:
     settings = load_settings()
+    cfg = Config(settings)
     setup_logging(settings.log_level, settings.service_name)
     setup_tracing(settings.otel_exporter_otlp_endpoint, settings.service_name)
 
@@ -51,13 +53,20 @@ async def build_app() -> tuple[FastAPI, dict[str, object]]:
     )
     log.info("startup.bundle.verified", digest=bundle.digest)
 
-    prompts = PromptRegistry.from_bundle(bundle.root)
+    bundle_view = BundleView.from_bundle(bundle.root)
     mcps = MCPRegistry.from_bundle(bundle.root)
     scrub_catalog = ScrubCatalog.from_bundle(bundle.root)
     schemas = SchemaRegistry(bundle.root)
 
     tokenizer = TokenizerClient(str(settings.tokenizer_url))
     opa = OPAClient(str(settings.opa_url))
+
+    llm_guard = LLMGuardClient(
+        base_url=settings.llm_guard_base_url,
+        timeout_seconds=settings.llm_guard_timeout_seconds,
+        enabled=settings.llm_guard_enabled,
+    )
+    LLM_GUARD_ENABLED.set(1 if settings.llm_guard_enabled else 0)
 
     oidc = OIDCValidator(
         issuer=str(settings.oidc_issuer),
@@ -97,7 +106,9 @@ async def build_app() -> tuple[FastAPI, dict[str, object]]:
 
     ingress_deps = IngressDeps(
         oidc=oidc,
-        prompts=prompts,
+        bundle=bundle_view,
+        llm_guard=llm_guard,
+        config=cfg,
         scrub_engine=scrub_engine,
         tokenizer=tokenizer,
         state=state,
@@ -105,7 +116,8 @@ async def build_app() -> tuple[FastAPI, dict[str, object]]:
         audit=audit,
         quarantine=quarantine,
         cost_meter=cost_meter,
-        litellm_internal_url=f"http://localhost:{settings.listen_addr.lstrip(':')}",
+        litellm_internal_url=settings.litellm_internal_url,
+        gateway_mcp_internal_url=settings.gateway_mcp_internal_url,
     )
     app.include_router(make_ingress_router(ingress_deps))
 
@@ -117,6 +129,8 @@ async def build_app() -> tuple[FastAPI, dict[str, object]]:
         tokenizer=tokenizer,
         opa=opa,
         scrub_engine=scrub_engine,
+        bundle=bundle_view,
+        llm_guard=llm_guard,
     )
     app.include_router(make_mcp_router(mcp_deps))
 
