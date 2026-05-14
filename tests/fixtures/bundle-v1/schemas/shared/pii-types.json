@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-security.io/schemas/shared/pii-types.json",
+  "title": "PII types",
+  "description": "Enumeration of PII types plus regex/rule backstops used by agent-gateway's scrubber as the second line of detection after schema annotations.",
+  "definitions": {
+    "PiiType": {
+      "type": "string",
+      "enum": ["EMAIL", "PHONE", "SSN", "ADDRESS", "POSTAL_CODE", "NAME", "CREDIT_CARD", "IBAN", "IP_ADDRESS", "DOB"]
+    }
+  },
+  "type": "object",
+  "required": ["version", "patterns"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Backstop ruleset version; bumps with the schema-library version."
+    },
+    "patterns": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z_]+$": {
+          "type": "object",
+          "required": ["pii_type", "patterns"],
+          "properties": {
+            "pii_type": { "$ref": "#/definitions/PiiType" },
+            "patterns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "regex"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "regex": { "type": "string", "description": "ECMA-262 regex (compatible with all consumer languages)." },
+                  "locale": { "type": "string", "description": "Optional locale narrowing, e.g., \"en-CA\"." }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

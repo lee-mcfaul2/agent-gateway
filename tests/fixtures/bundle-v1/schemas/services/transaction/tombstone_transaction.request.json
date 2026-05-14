@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["transaction_id", "reason", "actor"],
+  "properties": {
+    "transaction_id": {"type": "string", "format": "uuid"},
+    "reason":         {"type": "string", "minLength": 1, "maxLength": 500},
+    "actor":          {"type": "string", "minLength": 1, "description": "Authenticated user whose authority is invoked. The MCP cross-checks against the forwarded JWT."}
+  },
+  "additionalProperties": false
+}

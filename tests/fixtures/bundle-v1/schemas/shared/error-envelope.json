@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-security.io/schemas/shared/error-envelope.json",
+  "title": "Error envelope",
+  "description": "Standard error response shape used by every component.",
+  "type": "object",
+  "required": ["error_type", "retriable", "message"],
+  "properties": {
+    "error_type": {
+      "type": "string",
+      "description": "Stable identifier for the error class (e.g., SCHEMA_VALIDATION_FAILED, SIGNATURE_INVALID)."
+    },
+    "retriable": {
+      "type": "boolean",
+      "description": "Whether the caller should retry the same request."
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable description. Must NOT contain plaintext PII."
+    },
+    "trace_id": {
+      "$ref": "uuid.json#"
+    }
+  }
+}

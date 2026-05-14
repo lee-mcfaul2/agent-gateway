@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-security.io/schemas/shared/trace-context.json",
+  "title": "Trace context",
+  "description": "Request-scope identifiers propagated through every cross-component call.",
+  "type": "object",
+  "required": ["request_uuid"],
+  "properties": {
+    "request_uuid": {
+      "$ref": "uuid.json#",
+      "description": "The platform-internal request UUID. Used as the AAD scope for pii-tokenizer."
+    },
+    "traceparent": {
+      "type": "string",
+      "description": "W3C Trace Context header value.",
+      "pattern": "^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
+    },
+    "tracestate": {
+      "type": "string"
+    }
+  }
+}

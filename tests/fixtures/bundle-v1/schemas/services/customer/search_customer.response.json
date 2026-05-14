@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["customers"],
+  "properties": {
+    "customers": {
+      "type": "array",
+      "maxItems": 25,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "email", "created_at"],
+        "properties": {
+          "id":         { "type": "integer" },
+          "name":       { "type": "string" },
+          "email":      { "type": "string" },
+          "phone":      { "type": ["string", "null"] },
+          "address":    { "type": ["string", "null"] },
+          "created_at": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

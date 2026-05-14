@@ -1,0 +1,110 @@
+{
+  "bundle_version": "1.0.0",
+  "schema_library_version": "1.0.0",
+  "build": {
+    "timestamp": "2026-05-14T17:13:03.711337697Z",
+    "source_commit": "2dd49c8",
+    "builder_id": "gateway-test-fixture"
+  },
+  "envelope_cost_caps": {
+    "max_iterations": 8,
+    "max_wallclock_ms": 300000,
+    "max_cost_usd": 1
+  },
+  "services": [
+    {
+      "mcp": "audit_db",
+      "tools": [
+        {
+          "name": "search",
+          "request_digest": "sha256:2d96a9e04f7135240f6f4c77c58f9fa978d85c80b3ae38630a3e1daa25df858f",
+          "response_digest": "sha256:d5af5c7b299b6855fe9c6d7aee21ac3e96167d7f7bb1249acb25cef4c3062527",
+          "requires_permissions": [
+            "audit:read"
+          ]
+        }
+      ]
+    },
+    {
+      "mcp": "customer",
+      "tools": [
+        {
+          "name": "create_customer",
+          "request_digest": "sha256:7b0e367bd2a8b13c175bb144519f198778cee9f88cfdebd34c2cbd56cc6aae4f",
+          "response_digest": "sha256:4fee736114d283a17090f562dc4823fc4b0ce633786cfb9849c3734607dc9456",
+          "write": true,
+          "requires_permissions": [
+            "customers:write"
+          ]
+        },
+        {
+          "name": "get_order",
+          "request_digest": "sha256:e9ef222588002f1264f0be38a321eea58c1216cfa77a7240985a66e81cd1eb47",
+          "response_digest": "sha256:4ed922ce9ab116f013d909325691c2bca81dc655d3d8d9af4958942c369de0fb",
+          "requires_permissions": [
+            "orders:read"
+          ]
+        },
+        {
+          "name": "list_orders",
+          "request_digest": "sha256:dcb7be30b04eb07f06db199e9ac01fd910acbc82944e4320a98f6f9cd52e9753",
+          "response_digest": "sha256:5ccb1271724447e9c1d7f77931e5b408e043edfe042ff30ac81ce661065e83d0",
+          "requires_permissions": [
+            "orders:read"
+          ]
+        },
+        {
+          "name": "lookup_customer",
+          "request_digest": "sha256:f7ce73b05bf6988c9ae94dddb9817cffec30fa37c95f9abec603d8b86e7a857f",
+          "response_digest": "sha256:627c7c5cb9960f79d9eada1274506faa05abeaac979a39ac28c6a7030067d342",
+          "requires_permissions": [
+            "customers:read"
+          ]
+        },
+        {
+          "name": "search_customer",
+          "request_digest": "sha256:79e915e0b42bb5b20ce6a425332a37bbbb0b381f046d67a14b6036af28b61a3a",
+          "response_digest": "sha256:b8e2f8001943fc9e6cbb5e0750347a2057f2dcb3830cf2d1282bfa8fb37f3394",
+          "requires_permissions": [
+            "customers:read"
+          ]
+        }
+      ]
+    },
+    {
+      "mcp": "kb",
+      "tools": [
+        {
+          "name": "fetch",
+          "request_digest": "sha256:85d708fc6f8d200041c3fae9d193483067fc559850e1977bd6ff3f690f8fe2cd",
+          "response_digest": "sha256:2df2479769f0b85b01838af25579d9baea23e0e0402661bad989154c5e1cd6cc",
+          "requires_permissions": [
+            "kb:read"
+          ]
+        },
+        {
+          "name": "search",
+          "request_digest": "sha256:7e7dcb64a025ea05af667b9d1b150e86c609db3692c133bb78f92ff43f3bd97d",
+          "response_digest": "sha256:300bf6ef83b9cb8f36f41625fac823c1ea4bcf0c21469c7c96bb4d6578587b85",
+          "requires_permissions": [
+            "kb:read"
+          ]
+        }
+      ]
+    },
+    {
+      "mcp": "transaction",
+      "tools": [
+        {
+          "name": "tombstone_transaction",
+          "request_digest": "sha256:615495399a36a32150fbc1b1b743fef43dda39d3c8ca31aa62ff4256254a0b27",
+          "response_digest": "sha256:25f2800b7c530ae95298fcbc4549b9b8327d3bba7035ab3cb05d73c5ee5cac00",
+          "write": true,
+          "requires_permissions": [
+            "transactions:tombstone"
+          ]
+        }
+      ]
+    }
+  ]
+}

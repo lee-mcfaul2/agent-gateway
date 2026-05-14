@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["customer_id"],
+  "properties": {
+    "customer_id": {"type": "string", "format": "uuid"},
+    "created_at":  {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

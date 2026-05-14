@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["order"],
+  "properties": {
+    "order": {
+      "type": "object",
+      "required": ["id", "customer_id", "status", "total_cents", "currency", "placed_at", "line_items"],
+      "properties": {
+        "id":          { "type": "integer" },
+        "customer_id": { "type": "integer" },
+        "status":      { "type": "string", "enum": ["placed", "paid", "shipped", "delivered", "cancelled"] },
+        "total_cents": { "type": "integer" },
+        "currency":    { "type": "string", "minLength": 3, "maxLength": 3 },
+        "placed_at":   { "type": "string", "format": "date-time" },
+        "line_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "sku", "quantity", "unit_cents"],
+            "properties": {
+              "id":         { "type": "integer" },
+              "sku":        { "type": "string" },
+              "quantity":   { "type": "integer", "minimum": 1 },
+              "unit_cents": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

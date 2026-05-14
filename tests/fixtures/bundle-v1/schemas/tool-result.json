@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-security.io/schemas/tool-result.json",
+  "title": "Tool-call result envelope",
+  "description": "Gateway-to-sandbox response shape for every POST /v1/mcp/{mcp}/{tool}. The agent loop feeds this envelope verbatim to the LLM as the tool message.",
+  "type": "object",
+  "required": ["ok", "mcp", "tool", "request_uuid"],
+  "properties": {
+    "ok":           { "type": "boolean" },
+    "data":         { "description": "Present when ok=true. Validated separately against services/<mcp>/<tool>.response.json." },
+    "error":        { "type": "string", "description": "Error class. Present when ok=false (e.g. OPA_DENY, MCP_UNAVAILABLE, MCP_TIMEOUT, SCHEMA_VALIDATION_FAILED)." },
+    "reason":       { "type": "string", "description": "Human-readable reason. Present when ok=false." },
+    "mcp":          { "type": "string" },
+    "tool":         { "type": "string" },
+    "request_uuid": { "$ref": "shared/uuid.json#" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-security.io/schemas/final-response.json",
+  "title": "Final response (sandbox terminate envelope)",
+  "description": "The single-line JSON envelope agent-sandbox emits on stdout. Must match the sandbox's emitter byte-for-byte.",
+  "type": "object",
+  "required": ["terminate"],
+  "properties": {
+    "terminate": {
+      "type": "object",
+      "required": ["request_uuid", "prompt_uuid", "response", "iterations", "tools_called", "model", "finish_reason"],
+      "properties": {
+        "request_uuid": { "$ref": "shared/uuid.json#" },
+        "prompt_uuid":  { "$ref": "shared/uuid.json#" },
+        "response":     { "type": ["string", "null"] },
+        "iterations":   { "type": "integer", "minimum": 0 },
+        "tools_called": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["mcp", "tool", "outcome"],
+            "properties": {
+              "mcp":     { "type": "string" },
+              "tool":    { "type": "string" },
+              "outcome": { "type": "string" }
+            }
+          }
+        },
+        "model": { "type": "string" },
+        "tokens_used": {
+          "type": "object",
+          "required": ["prompt", "completion", "total"],
+          "properties": {
+            "prompt":     { "type": "integer", "minimum": 0 },
+            "completion": { "type": "integer", "minimum": 0 },
+            "total":      { "type": "integer", "minimum": 0 }
+          }
+        },
+        "finish_reason": {
+          "type": "string",
+          "enum": ["terminate", "iteration_cap", "wallclock_timeout", "schema_mismatch", "llm_error", "internal_error"]
+        },
+        "error": {
+          "type": "object",
+          "required": ["category"],
+          "properties": {
+            "category":               { "type": "string" },
+            "mcp":                    { "type": "string" },
+            "tool":                   { "type": "string" },
+            "message":                { "type": "string" },
+            "expected_schema_digest": { "type": "string" },
+            "validation_errors":      { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

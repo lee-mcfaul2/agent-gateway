@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["tombstoned_at"],
+  "properties": {
+    "tombstoned_at": {"type": "string", "format": "date-time"},
+    "prior_state":   {"type": "string", "description": "Brief description of the transaction's state before tombstoning, for audit join."}
+  },
+  "additionalProperties": false
+}

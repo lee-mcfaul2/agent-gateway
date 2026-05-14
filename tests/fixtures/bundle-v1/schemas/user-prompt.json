@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-security.io/schemas/user-prompt.json",
+  "title": "User prompt",
+  "description": "The inbound request envelope every external request carries. One schema, one shape, one set of fields.",
+  "type": "object",
+  "required": ["schema_uuid", "prompt_uuid", "text"],
+  "properties": {
+    "schema_uuid": {
+      "$ref": "shared/uuid.json#",
+      "description": "Stable UUID identifying THIS schema version. Pinned constant per schema_library_version."
+    },
+    "prompt_uuid": {
+      "$ref": "shared/uuid.json#",
+      "description": "Per-instance UUID minted by the caller for this single request. Audit/trace join key."
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The user's raw prompt text."
+    },
+    "model": {
+      "type": "string",
+      "description": "Optional model hint. Free-form string per OpenAI / LiteLLM convention (e.g. \"claude-sonnet-4-6\"). Gateway has final say."
+    }
+  },
+  "additionalProperties": false
+}
