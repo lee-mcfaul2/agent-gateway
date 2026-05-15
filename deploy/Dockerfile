@@ -9,7 +9,9 @@ WORKDIR /src
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 
-ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
 RUN uv sync --frozen --no-dev
 
 RUN /opt/venv/bin/python -m spacy download en_core_web_lg
