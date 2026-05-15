@@ -87,3 +87,29 @@ jobs:
               --certificate-identity-regexp '^https://github\.com/lee-mcfaul2/agent-gateway/\.github/workflows/build-and-sign\.yml@refs/tags/${{ github.ref_name }}$' \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com
             ```
+
+  chart:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - uses: sigstore/cosign-installer@v3
+      - name: package chart
+        run: |
+          helm package deploy/helm/ --app-version ${GITHUB_REF_NAME#v} --version ${GITHUB_REF_NAME#v}
+      - name: login
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: push
+        id: push_chart
+        run: |
+          OUTPUT=$(helm push agent-gateway-${GITHUB_REF_NAME#v}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts 2>&1)
+          DIGEST=$(echo "$OUTPUT" | grep -oE 'sha256:[a-f0-9]+' | head -n1)
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+      - name: cosign sign chart
+        run: |
+          cosign sign --yes ghcr.io/${{ github.repository_owner }}/charts/agent-gateway@${{ steps.push_chart.outputs.digest }}
