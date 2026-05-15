@@ -36,6 +36,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - id: ver
+        run: echo "v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
       - id: push
         uses: docker/build-push-action@v6
         with:
@@ -43,7 +45,9 @@ jobs:
           file: deploy/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/lee-mcfaul2/agent-gateway:${{ github.ref_name }}
+          tags: |
+            ghcr.io/lee-mcfaul2/agent-gateway:${{ github.ref_name }}
+            ghcr.io/lee-mcfaul2/agent-gateway:${{ steps.ver.outputs.v }}
 
   sign:
     runs-on: ubuntu-latest
