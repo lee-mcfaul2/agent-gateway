@@ -19,9 +19,9 @@ FROM python:3.12-slim AS runtime
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl \
- && curl -sSL -o /usr/local/bin/cosign https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 \
+ && curl -fsSL -o /usr/local/bin/cosign https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 \
  && chmod +x /usr/local/bin/cosign \
- && curl -sSL https://github.com/oras-project/oras/releases/latest/download/oras_linux_amd64.tar.gz | tar -xz -C /usr/local/bin oras \
+ && curl -fsSL https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz | tar -xz -C /usr/local/bin oras \
  && chmod +x /usr/local/bin/oras \
  && apt-get purge -y --auto-remove curl \
  && rm -rf /var/lib/apt/lists/*
