@@ -28,7 +28,11 @@ class Settings(BaseSettings):
 
     # Bundle + prompts
     prompt_bundle_ref: str
-    prompt_bundle_cosign_key: str
+    prompt_bundle_cosign_key: str = ""
+    # DEMO-ONLY: when set, load the bundle from this local directory and SKIP
+    # cosign/oras entirely (signature verification disabled). Empty (default)
+    # keeps the production OCI pull + verify path.
+    prompt_bundle_path: str = ""
 
     # Audit + quarantine
     audit_database_url: PostgresDsn

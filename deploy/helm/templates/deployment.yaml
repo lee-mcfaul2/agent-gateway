@@ -27,6 +27,11 @@ spec:
             - { name: GATEWAY_TOKENIZER_URL,   value: "{{ .Values.tokenizer.url }}" }
             - { name: GATEWAY_OPA_URL,         value: "http://localhost:8181" }
             - { name: GATEWAY_PROMPT_BUNDLE_REF, value: "{{ .Values.bundle.ref }}" }
+            {{- if .Values.bundle.demoMode }}
+            # DEMO-ONLY: load the bundle from the mounted PVC path and skip
+            # cosign/oras. This env takes precedence over the OCI ref above.
+            - { name: GATEWAY_PROMPT_BUNDLE_PATH, value: {{ .Values.bundle.demoMountPath | quote }} }
+            {{- end }}
             - { name: GATEWAY_AGENT_JOB_NAMESPACE, value: "{{ .Values.sandboxNamespace }}" }
             - { name: GATEWAY_AGENT_JOB_IMAGE, value: "{{ .Values.agentJob.image }}" }
             - { name: GATEWAY_AGENT_JOB_TIMEOUT_SECONDS, value: "{{ .Values.agentJob.timeoutSeconds }}" }

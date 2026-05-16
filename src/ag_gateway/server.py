@@ -29,7 +29,7 @@ from ag_gateway.obs.logging import get_logger, setup_logging
 from ag_gateway.obs.metrics import LLM_GUARD_ENABLED, render_text
 from ag_gateway.obs.quarantine import QuarantineStore
 from ag_gateway.obs.tracing import setup_tracing, shutdown_tracing
-from ag_gateway.prompts.bundle import pull_and_verify
+from ag_gateway.prompts.bundle import load_local, pull_and_verify
 from ag_gateway.prompts.bundle_view import BundleView
 from ag_gateway.schemas.scrub_categories import ScrubCatalog
 from ag_gateway.schemas.validate import SchemaRegistry
@@ -45,13 +45,25 @@ async def build_app() -> tuple[FastAPI, dict[str, object]]:
     setup_logging(settings.log_level, settings.service_name)
     setup_tracing(settings.otel_exporter_otlp_endpoint, settings.service_name)
 
-    log.info("startup.bundle.pulling", ref=settings.prompt_bundle_ref)
-    bundle = await pull_and_verify(
-        ref=settings.prompt_bundle_ref,
-        cosign_public_key=settings.prompt_bundle_cosign_key,
-        dest_root=Path("/var/lib/ag-gateway/bundle"),
-    )
-    log.info("startup.bundle.verified", digest=bundle.digest)
+    if settings.prompt_bundle_path:
+        log.warning(
+            "startup.bundle.local_demo_mode",
+            path=settings.prompt_bundle_path,
+            message=(
+                "DEMO MODE: loading prompt bundle from a local path; "
+                "bundle signature verification is DISABLED. Do not use in production."
+            ),
+        )
+        bundle = await load_local(settings.prompt_bundle_path)
+        log.info("startup.bundle.loaded_local", digest=bundle.digest)
+    else:
+        log.info("startup.bundle.pulling", ref=settings.prompt_bundle_ref)
+        bundle = await pull_and_verify(
+            ref=settings.prompt_bundle_ref,
+            cosign_public_key=settings.prompt_bundle_cosign_key,
+            dest_root=Path("/var/lib/ag-gateway/bundle"),
+        )
+        log.info("startup.bundle.verified", digest=bundle.digest)
 
     bundle_view = BundleView.from_bundle(bundle.root)
     mcps = MCPRegistry.from_bundle(bundle.root)

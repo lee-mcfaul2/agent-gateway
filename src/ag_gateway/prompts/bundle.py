@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import os
 import shutil
 import subprocess  # nosec B404 — required for cosign/oras shell-out
@@ -56,6 +57,33 @@ async def pull_and_verify(
         raise BundleVerifyError(f"oras pull failed for {ref}") from exc
 
     return Bundle(ref=ref, digest=digest, root=workdir)
+
+
+async def load_local(path: Path | str) -> Bundle:
+    """DEMO-ONLY: load a bundle from a local directory, skipping cosign/oras.
+
+    Returns the SAME ``Bundle`` contract as :func:`pull_and_verify` after its
+    ``oras pull`` step — i.e. ``root`` points at the on-disk bundle tree that
+    downstream consumers (``BundleView.from_bundle`` etc.) parse and validate.
+    No OCI artifact is pulled and no signature is verified. This MUST only be
+    used by the loudly-flagged demo deployment.
+    """
+    root = Path(path)
+    if not root.exists() or not root.is_dir():
+        raise FileNotFoundError(f"local bundle directory not found: {root}")
+
+    # No OCI manifest exists locally; derive a stable content digest so the
+    # startup log line / digest field remains meaningful and non-empty.
+    h = hashlib.sha256()
+    for p in sorted(root.rglob("*")):
+        if p.is_file():
+            h.update(p.relative_to(root).as_posix().encode())
+            h.update(b"\x00")
+            h.update(p.read_bytes())
+            h.update(b"\x00")
+    digest = "sha256:" + h.hexdigest()
+
+    return Bundle(ref=f"local://{root}", digest=digest, root=root)
 
 
 async def _resolve_key(cosign_public_key: str) -> str:
