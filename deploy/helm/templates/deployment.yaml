@@ -30,28 +30,37 @@ spec:
             - { name: GATEWAY_AGENT_JOB_NAMESPACE, value: "{{ .Values.sandboxNamespace }}" }
             - { name: GATEWAY_AGENT_JOB_IMAGE, value: "{{ .Values.agentJob.image }}" }
             - { name: GATEWAY_AGENT_JOB_TIMEOUT_SECONDS, value: "{{ .Values.agentJob.timeoutSeconds }}" }
+            {{- if not .Values.bundle.demoMode }}
             - name: GATEWAY_PROMPT_BUNDLE_COSIGN_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.bundle.cosignSecretName }}
                   key:  {{ .Values.bundle.cosignSecretKey }}
+            {{- end }}
             - name: GATEWAY_AUDIT_DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.audit.databaseSecretName }}
                   key:  {{ .Values.audit.databaseSecretKey }}
+            {{- if .Values.llmProviders.anthropicSecretName }}
             - name: ANTHROPIC_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.llmProviders.anthropicSecretName }}
                   key:  {{ .Values.llmProviders.anthropicSecretKey }}
+            {{- end }}
+            {{- if .Values.llmProviders.openaiSecretName }}
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.llmProviders.openaiSecretName }}
                   key:  {{ .Values.llmProviders.openaiSecretKey }}
+            {{- end }}
           volumeMounts:
             - { name: litellm-config, mountPath: /etc/gateway, readOnly: true }
+            {{- if .Values.bundle.demoMode }}
+            - { name: prompt-bundle, mountPath: {{ .Values.bundle.demoMountPath | quote }}, readOnly: true }
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
@@ -77,3 +86,8 @@ spec:
           configMap: { name: agent-gateway-policy }
         - name: policy-data
           configMap: { name: agent-gateway-policy-data }
+        {{- if .Values.bundle.demoMode }}
+        - name: prompt-bundle
+          persistentVolumeClaim:
+            claimName: {{ .Values.bundle.demoPvcName }}
+        {{- end }}
