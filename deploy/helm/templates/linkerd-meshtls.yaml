@@ -5,4 +5,4 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   identities:
-    - "agent-sandbox.{{ .Values.sandboxNamespace }}.serviceaccount.identity.linkerd.cluster.local"
+    - "agent-sandbox-sa.{{ .Values.sandboxNamespace }}.serviceaccount.identity.linkerd.cluster.local"
