@@ -59,7 +59,9 @@ def fixtures(tmp_path: Path) -> dict[str, Any]:
     }))
     mcps = MCPRegistry.from_bundle(tmp_path)
 
-    schemas_dir = tmp_path / "schemas" / "kb" / "1.0.0"
+    # Canonical bundle layout: schemas/services/<mcp>/<tool>.<kind>.json
+    # (matches routes.py schema_ref = services/<mcp>/<tool>...).
+    schemas_dir = tmp_path / "schemas" / "services" / "kb"
     schemas_dir.mkdir(parents=True)
     (schemas_dir / "search.request.json").write_text(
         json.dumps({"type": "object", "properties": {"q": {"type": "string"}}, "required": ["q"]})
