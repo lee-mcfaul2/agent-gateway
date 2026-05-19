@@ -12,3 +12,35 @@ spec:
     - kind: MeshTLSAuthentication
       name: agent-sandbox-only
       group: policy.linkerd.io
+
+---
+# The gateway is the platforms external entry point: human users reach
+# /v1/chat/completions over plain ingress (no mesh mTLS) and authenticate via
+# OIDC/JWT at the APP layer. This is the designs documented "external human
+# ingress" mTLS exception. AuthorizationPolicies targeting one Server are
+# OR-ed, so this is additive to the agent-sandbox MeshTLS path above; the
+# sensitive internal Servers (pii-tokenizer/mcp/llm-guard) stay MeshTLS-gated.
+apiVersion: policy.linkerd.io/v1alpha1
+kind: NetworkAuthentication
+metadata:
+  name: agent-gateway-external
+  namespace: {{ .Values.namespace }}
+spec:
+  networks:
+    - cidr: 0.0.0.0/0
+    - cidr: "::/0"
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: agent-gateway-external
+  namespace: {{ .Values.namespace }}
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: agent-gateway
+  requiredAuthenticationRefs:
+    - kind: NetworkAuthentication
+      name: agent-gateway-external
+      group: policy.linkerd.io
