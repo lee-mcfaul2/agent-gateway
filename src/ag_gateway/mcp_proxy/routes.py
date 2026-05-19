@@ -105,7 +105,7 @@ def make_router(deps: Deps) -> APIRouter:
                 "OPA_DENY", decision.reason, mcp=mcp, tool=tool, request_uuid=request_uuid
             )
 
-        schema_ref = f"{mcp}/{entry.schema_version}/{tool}.request.json"
+        schema_ref = f"services/{mcp}/{tool}.request.json"
         err = deps.schemas.validate(args, schema_ref, kind="request", mcp=mcp)
         if err is not None:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="schema_fail").inc()
@@ -145,7 +145,7 @@ def make_router(deps: Deps) -> APIRouter:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="mcp_error").inc()
             return wrap_error(res.error, res.reason, mcp=mcp, tool=tool, request_uuid=request_uuid)
 
-        schema_ref = f"{mcp}/{entry.schema_version}/{tool}.response.json"
+        schema_ref = f"services/{mcp}/{tool}.response.json"
         err = deps.schemas.validate(res.body, schema_ref, kind="response", mcp=mcp)
         if err is not None:
             TOOL_CALLS_TOTAL.labels(mcp=mcp, tool=tool, outcome="schema_fail").inc()
